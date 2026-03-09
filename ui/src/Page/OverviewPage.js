@@ -48,7 +48,7 @@ export const Overview = () => {
                 allMem += item.mem_byte;
                 allSwapMem += item.swap_mem_byte;
             })
-            setResourcePercent(`CPU:${(allCPU*100).toFixed(2)}%\n 内存:${(allMem / (1<<20)).toFixed(2)}MB\n 交换内存:${(allSwapMem / (1<<20)).toFixed(2)}MB`)
+            setResourcePercent(`CPU:${(allCPU*100).toFixed(2)}%\n Memory:${(allMem / (1<<20)).toFixed(2)}MB\n Swap Memory:${(allSwapMem / (1<<20)).toFixed(2)}MB`)
         })
         GetAllPosition((response)=>{
             setInstancePosition(response.data.data?response.data.data:{})
@@ -98,7 +98,7 @@ export const Overview = () => {
                     allMem += item.mem_byte;
                     allSwapMem += item.swap_mem_byte;
                 })
-                setResourcePercent(`CPU:${allCPU.toFixed(3)}%\n 内存:${(allMem / (1<<20)).toFixed(2)}MB\n 交换内存:${(allSwapMem / (1<<20)).toFixed(2)}MB`)
+                setResourcePercent(`CPU:${allCPU.toFixed(3)}%\n Memory:${(allMem / (1<<20)).toFixed(2)}MB\n Swap Memory:${(allSwapMem / (1<<20)).toFixed(2)}MB`)
             })
             GetAllPosition((response)=>{
                 setInstancePosition(response.data.data?response.data.data:{})
@@ -133,37 +133,37 @@ export const Overview = () => {
     const items = [
         {
           key: 'emulation_status',
-          label: '运行状态',
+          label: 'Running Status',
           children: <p>
                 {running?
-                    <Badge status="success" text="已启动" />:
-                    <Badge status="default" text="未启动" />    
+                    <Badge status="success" text="Started" />:
+                    <Badge status="default" text="Not Started" />    
                 }
             </p>,
         },
         {
           key: 'cluster_num',
-          label: '集群机器数量',
+          label: 'Cluster Machine Count',
           children: <p>{nodeList?nodeList.length:0}</p>,
         },
         {
           key: 'instance_num',
-          label: '模拟网络节点数量',
+          label: 'Simulated Network Node Count',
           children: <p>{instanceList?instanceList.length:0}</p>,
         },
         {
           key: 'link_num',
-          label: '链路数量',
+          label: 'Link Count',
           children: <p>{linkList?linkList.length:0}</p>,
         },
         {
           key: 'resource',
-          label: '资源利用率',
+          label: 'Resource Utilization',
           children: <p>{resourcePercent}</p>,
         },
         {
             key: 'operation',
-            label: '配置操作',
+            label: 'Configuration Operations',
             children: <p>
                     <input
                         style={{display: 'none'}}
@@ -185,20 +185,20 @@ export const Overview = () => {
                                         console.error(e);
                                         messageApi.open({
                                             type: "error",
-                                            content: "导入失败:"+e.toString(),
+                                            content: "Import Failed:"+e.toString(),
                                         })
                                     }
                                 };
                                 reader.readAsText(fileObj);
                                 messageApi.open({
                                     type: "success",
-                                    content: "成功导入节点类型配置文件",
+                                    content: "Successfully Imported Node Type Configuration File",
                                 })
                             } catch (e) {
                                 console.error(e);
                                 messageApi.open({
                                     type: "error",
-                                    content: "导入失败:"+e.toString(),
+                                    content: "Import Failed:"+e.toString(),
                                 })
                             }
                         }}
@@ -208,7 +208,7 @@ export const Overview = () => {
                             typeInputRef.current.click()
                         }}
                     >
-                        上传类型配置
+                        Upload Type Configuration
                     </Button>
                     <input
                         style={{display: 'none'}}
@@ -233,20 +233,20 @@ export const Overview = () => {
                                         console.error(e);
                                         messageApi.open({
                                             type: "error",
-                                            content: "导入失败:"+e.toString(),
+                                            content: "Import Failed:"+e.toString(),
                                         })
                                     }
                                 };
                                 reader.readAsText(fileObj);
                                 messageApi.open({
                                     type: "success",
-                                    content: "成功导入拓扑配置文件",
+                                    content: "Successfully Imported Topology Configuration File",
                                 })
                             } catch (e) {
                                 console.error(e);
                                 messageApi.open({
                                     type: "error",
-                                    content: "导入失败:"+e.toString(),
+                                    content: "Import Failed:"+e.toString(),
                                 })
                             }
                         }}
@@ -256,7 +256,7 @@ export const Overview = () => {
                             topoInputRef.current.click()
                         }}
                     >
-                        上传拓扑配置
+                        Upload Topology Configuration
                     </Button>
                     <Button style={{marginLeft:"5px",marginRight:"5px"}}
                         onClick={running?
@@ -265,7 +265,7 @@ export const Overview = () => {
                                     setRunning(!running)
                                     messageApi.open({
                                         type: "success",
-                                        content: "停止成功",
+                                        content: "Stop Successful",
                                     })
                                 })
                             }:
@@ -275,13 +275,13 @@ export const Overview = () => {
                                     setRunning(!running)
                                     messageApi.open({
                                         type: "success",
-                                        content: "启动成功",
+                                        content: "Start Successful",
                                     })
                                 })
                             }
                         }
                     >
-                        {running?"停止模拟":"启动模拟"}
+                        {running?"Stop Simulation":"Start Simulation"}
                     </Button>
                     <Button style={{marginLeft:"5px",marginRight:"5px"}}
                         onClick={()=>{
@@ -294,12 +294,12 @@ export const Overview = () => {
                                 })
                                 messageApi.open({
                                     type: "success",
-                                    content: "重置成功",
+                                    content: "Reset Successful",
                                 })
                             })
                         }}
                     >
-                        重置模拟环境
+                        Reset Simulation Environment
                     </Button>
             </p>,
         }
@@ -309,7 +309,7 @@ export const Overview = () => {
         return {
             type_name:item,
             image:typeConfig[item].image,
-            resource:"CPU:"+typeConfig[item].resource_limit.nano_cpu/1e7+"% 内存:"+(typeConfig[item].resource_limit.memory_byte/ (1<<20)).toFixed(1)+" MB"
+            resource:"CPU:"+typeConfig[item].resource_limit.nano_cpu/1e7+"% Memory:"+(typeConfig[item].resource_limit.memory_byte/ (1<<20)).toFixed(1)+" MB"
         }
     })
 
@@ -317,7 +317,7 @@ export const Overview = () => {
         <div>
         {contextHolder}
         <Card style={{width:"100%"}}>
-        <Typography.Title level={4}>运行状态</Typography.Title>
+        <Typography.Title level={4}>Running Status</Typography.Title>
         <Descriptions bordered items={items} />
         </Card>
         <Divider/>
@@ -330,15 +330,15 @@ export const Overview = () => {
             dataSource={instanceTypeData}
             header={
                 <Typography.Title level={4}>
-                    节点类型配置
-                    <Button>添加节点类型</Button>
+                    Node Type Configuration
+                    <Button>Add Node Type</Button>
                 </Typography.Title>
                 }
             renderItem={(item) => (
             <List.Item>
-                <Card title={"类型: " + item.type_name}>
-                    <p>对应镜像: {item.image}</p>
-                    <p>资源配额: {item.resource}</p>
+                <Card title={"Type: " + item.type_name}>
+                    <p>Corresponding Image: {item.image}</p>
+                    <p>Resource Quota: {item.resource}</p>
                 </Card>
             </List.Item>
             )}
@@ -346,7 +346,7 @@ export const Overview = () => {
         </Card>
         <Divider/>
         <Card style={{width:"100%"}}>
-            <Typography.Title level={4}>3D可视化展示</Typography.Title>
+            <Typography.Title level={4}>3D Visualization Display</Typography.Title>
             <Viewer timeline={false} homeButton={false} geocoder={false} animation={false} navigationHelpButton={false} fullscreenButton={false}>
                 {   
                     

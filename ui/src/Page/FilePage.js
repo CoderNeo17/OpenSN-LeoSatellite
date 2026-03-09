@@ -45,13 +45,13 @@ export const FilePage = () => {
           <Row justify="space-between" style={{height:"100%"}} >
               <Col style={{height:"100%"}}>
                   <Card style={{width:"20vw",height:"80vh"}}>
-                      <Typography.Title level={4}>文件列表</Typography.Title>
+                      <Typography.Title level={4}>File List</Typography.Title>
                       <input type="file" ref={inputRef} style={{display:"none"}} onChange={(e)=>{
                           const file = e.target.files[0]
                           UploadFile(file,selectPath,(response)=>{
                             messageApi.open({
                                 type: "success",
-                                content: "上传文件成功",
+                                content: "File Upload Successful",
                             })
                           })
                       } }/>
@@ -59,7 +59,7 @@ export const FilePage = () => {
                           onClick={()=>{
                             inputRef.current.click()
                           }}
-                      >上传</Button>
+                      >Upload</Button>
                       <Button type="primary" style={{marginRight:"10px",marginLeft:"10px"}} 
                         onClick={()=>{
                           setSelectPath("")
@@ -74,7 +74,7 @@ export const FilePage = () => {
                           setTreeKeys(tmpTreeKeys)
                           
                         }}
-                      >刷新</Button>
+                      >Refresh</Button>
                       <Tree
                           loadedKeys={loadedKeys}
                           style={{height:"65vh",overflowY:"auto"}}
@@ -107,7 +107,7 @@ export const FilePage = () => {
               <Col style={{height:"100%"}}>
               
               <Card style={{width:"70vw",height:"80vh"}}>
-              <Typography.Title level={4}>文件预览(仅文本文件)</Typography.Title>
+              <Typography.Title level={4}>File Preview (Text Files Only)</Typography.Title>
               <Row justify="right"></Row>
                   <TextArea wrap="false" readOnly style={{height:"60vh"}} value={previewContent}/>
 
@@ -120,20 +120,20 @@ export const FilePage = () => {
                           window.open(downloadUrl)
                           messageApi.open({
                               type: "success",
-                              content: "下载文件成功",
+                              content: "File Download Successful",
                           })
                       }}
-                  >下载</Button>
+                  >Download</Button>
                   <Button type="primary" style={{marginRight:"10px",marginLeft:"10px"}}
                       onClick={()=>{
                           DeleteFile(selectPath,(response)=>{
                             messageApi.open({
                                 type: "success",
-                                content: "删除文件成功",
+                                content: "File Deletion Successful",
                             })
                           })
                       }}
-                  >删除</Button>
+                  >Delete</Button>
               </Card>
               </Col>
           </Row>

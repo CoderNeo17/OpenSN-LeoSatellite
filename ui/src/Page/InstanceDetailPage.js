@@ -36,59 +36,59 @@ export const InstanceDetailPage = () => {
     const descriptionDetail = [
         {
             key:"instance_id",
-            label:"节点ID",
+            label:"Node ID",
             children:instanceID,
         },
         {
             key:"instance_name",
-            label:"节点名称",
+            label:"Node Name",
             children:instanceInfo.name,
         },
         {
             key:"instance_start",
-            label:"节点启动状态",
+            label:"Node Start Status",
             children:instanceInfo.start?
-                <Badge status="success" text="已启动" />:
-                <Badge status="default" text="未启动" />    
+                <Badge status="success" text="Started" />:
+                <Badge status="default" text="Not Started" />    
             ,
         },
         {
             key:"instance_type",
-            label:"节点类型",
+            label:"Node Type",
             children:instanceInfo.type,
         },
         {
             key:"instance_image",
-            label:"节点镜像",
+            label:"Node Image",
             children:instanceInfo.image,
         },
         {
             key:"node_index",
-            label:"节点部署机器编号",
+            label:"Node Deployment Machine Number",
             children:nodeIndex,
         },
         {
             key:"instance_resource",
-            label:"节点资源限制",
+            label:"Node Resource Limit",
             children:<div>
                 <p>
-                    CPU限额(Nano): {instanceInfo?.resource_limit?.nano_cpu}
+                    CPU Limit (Nano): {instanceInfo?.resource_limit?.nano_cpu}
                 </p>
                 <p>
-                    内存(Byte): {instanceInfo?.resource_limit?.memory_byte}
+                    Memory (Byte): {instanceInfo?.resource_limit?.memory_byte}
                 </p>
             </div>,
         },
         {
             key:"instance_connections",
-            label:"节点连接信息",
+            label:"Node Connection Information",
             children:<List>
                 {instanceInfo.connections?Object.keys(instanceInfo.connections).map((item,index)=>{
                     return (
                         <List.Item key={index}>
                             <List.Item.Meta title={<Typography.Link href={`/link/${instanceInfo.node_index}/${item}`} target="_blank">{item}</Typography.Link>}/>
                             <p>
-                                {`连接到部署于机器${instanceInfo.connections[item].end_node_index}的类型为${instanceInfo.connections[item].instance_type}节点`}
+                                {`Connected to node of type ${instanceInfo.connections[item].instance_type} deployed on machine ${instanceInfo.connections[item].end_node_index}`}
                                 <Typography.Link  href={`/instance/${instanceInfo.connections[item].end_node_index}/${instanceInfo.connections[item].instance_id}`} target="_blank">{instanceInfo.connections[item].instance_id} </Typography.Link>
                             </p>
                         </List.Item>
@@ -100,11 +100,11 @@ export const InstanceDetailPage = () => {
 
     const cpuChartOption = {
         title: {
-            text: '节点CPU使用情况'
+            text: 'Node CPU Usage'
         },
         tooltip: {},
         legend: {
-            data:['CPU使用率']
+            data:['CPU Usage Rate']
         },
         xAxis: {
             data: instanceResource[instanceID]?instanceResource[instanceID].map((item)=>{
@@ -114,7 +114,7 @@ export const InstanceDetailPage = () => {
         },
         yAxis: {},
         series: [{
-            name: 'CPU使用率',
+            name: 'CPU Usage Rate',
             type:'line',
             data: instanceResource[instanceID]?instanceResource[instanceID].map((item)=>item.cpu_usage):[]
         }]
@@ -122,11 +122,11 @@ export const InstanceDetailPage = () => {
 
     const memChartOption = {
         title: {
-            text: '节点内存使用情况'
+            text: 'Node Memory Usage'
         },
         tooltip: {},
         legend: {
-            data:['内存使用量','交换内存使用量']
+            data:['Memory Usage','Swap Memory Usage']
         },
         xAxis: {
             data: instanceResource[instanceID]?instanceResource[instanceID].map((item)=>{
@@ -137,12 +137,12 @@ export const InstanceDetailPage = () => {
         yAxis: {},
         series: [
             {
-                name: '内存使用量',
+                name: 'Memory Usage',
                 type:'line',
                 data: instanceResource[instanceID]?instanceResource[instanceID].map((item)=>item.mem_byte):[]
             },
             {
-                name: '交换内存使用量',
+                name: 'Swap Memory Usage',
                 type:'line',
                 data: instanceResource[instanceID]?instanceResource[instanceID].map((item)=>item.swap_mem_byte):[]
             }
@@ -154,7 +154,7 @@ export const InstanceDetailPage = () => {
         <div>
             <Row justify="center">
                 <Col>
-                    <Typography.Title level={2} >实例详情:{instanceID}</Typography.Title>
+                    <Typography.Title level={2} >Instance Details:{instanceID}</Typography.Title>
                 </Col>
             </Row>
             <Row justify="center">
@@ -166,7 +166,7 @@ export const InstanceDetailPage = () => {
                 
             </Row>
             <Divider/>
-            <Row justify="center"> <Typography.Title level={4}>资源监控</Typography.Title> </Row>
+            <Row justify="center"> <Typography.Title level={4}>Resource Monitoring</Typography.Title> </Row>
             <Row justify="center"> 
             <Select
                 defaultValue={resourcePeriod}
@@ -178,15 +178,15 @@ export const InstanceDetailPage = () => {
                     })
                 }}
                 options={[
-                    { value: '1m', label: '过去一分钟' },
-                    { value: '5m', label: '过去五分钟' },
-                    { value: '10m', label: '过去十分钟' },
-                    { value: '30m', label: '过去三十分钟' },
-                    { value: '1h', label: '过去一小时' },
-                    { value: '3h', label: '过去三小时' },
-                    { value: '6h', label: '过去六小时' },
-                    { value: '12h', label: '过去十二小时' },
-                    { value: '24h', label: '过去二十四小时' },
+                    { value: '1m', label: 'Last 1 Minute' },
+                    { value: '5m', label: 'Last 5 Minutes' },
+                    { value: '10m', label: 'Last 10 Minutes' },
+                    { value: '30m', label: 'Last 30 Minutes' },
+                    { value: '1h', label: 'Last 1 Hour' },
+                    { value: '3h', label: 'Last 3 Hours' },
+                    { value: '6h', label: 'Last 6 Hours' },
+                    { value: '12h', label: 'Last 12 Hours' },
+                    { value: '24h', label: 'Last 24 Hours' },
                 ]}
             />
             {/* <Button onClick={()=>{
@@ -194,7 +194,7 @@ export const InstanceDetailPage = () => {
                     setInstanceResource(response.data.data)
                 })
             }
-            }>刷新</Button> */}
+            }>Refresh</Button> */}
             </Row>
             <Row justify="space-between">
 

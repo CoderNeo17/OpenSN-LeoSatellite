@@ -42,30 +42,30 @@ export const LinkDetailPage = () => {
     const descriptionDetail = [
         {
             key:"link_id",
-            label:"链路ID",
+            label:"Link ID",
             children:linkID,
         },
         {
             key:"link_enable",
-            label:"链路启用状态",
+            label:"Link Enable Status",
             children:linkInfo.enable?
-                <Badge status="success" text="已启动" />:
-                <Badge status="default" text="未启动" />    
+                <Badge status="success" text="Started" />:
+                <Badge status="default" text="Not Started" />    
             ,
         },
         {
             key:"link_type",
-            label:"链路类型",
+            label:"Link Type",
             children:linkInfo.type,
         },
         {
             key:"node_index",
-            label:"链路部署机器编号",
+            label:"Link Deployment Machine Number",
             children:nodeIndex,
         },
         {
             key:"link_parameter",
-            label:"链路参数",
+            label:"Link Parameters",
             children:<List>
                 {Object.keys(linkParameter).map((key)=>{
                     return (
@@ -81,14 +81,14 @@ export const LinkDetailPage = () => {
         },
         {
             key:"link_end_infos",
-            label:"链路两端信息",
+            label:"Link End Information",
             children:<List>
                 {linkInfo.end_infos?linkInfo.end_infos.map((item,index)=>{
                     return (
                         <List.Item key={index}>
                             <List.Item.Meta
                                 title={<Typography.Link href={`/instance/${item.end_node_index}/${item.instance_id}`} target="_blank">{item.instance_id}</Typography.Link>}
-                                description={`部署于机器${item.node_index}的类型为${item.instance_type}节点`}
+                                description={`Node of type ${item.instance_type} deployed on machine ${item.node_index}`}
                             />
                         </List.Item>
                     )
@@ -97,7 +97,7 @@ export const LinkDetailPage = () => {
         },
         {
             key:"link_addr_infos",
-            label:"链路端地址信息",
+            label:"Link End Address Information",
             children:<List bordered>
                 {linkInfo.address_infos?linkInfo.address_infos.map((item,index)=>{
                     return (
@@ -118,11 +118,11 @@ export const LinkDetailPage = () => {
 
     const cpuChartOption = {
         title: {
-            text: '链路收发吞吐量(Bps)'
+            text: 'Link Send/Receive Throughput (Bps)'
         },
         tooltip: {},
         legend: {
-            data:['接收数据','发送数据']
+            data:['Received Data','Sent Data']
         },
         xAxis: {
             data: linkResource[linkID]?linkResource[linkID].map((item)=>{
@@ -133,12 +133,12 @@ export const LinkDetailPage = () => {
         yAxis: {},
         series: [
             {
-                name: '发送数据量',
+                name: 'Sent Data Volume',
                 type:'line',
                 data: linkResource[linkID]?linkResource[linkID].map((item)=>item.send_bps):[]
             },
             {
-                name: '接收数据量',
+                name: 'Received Data Volume',
                 type:'line',
                 data: linkResource[linkID]?linkResource[linkID].map((item)=>item.recv_bps):[]
             }
@@ -147,11 +147,11 @@ export const LinkDetailPage = () => {
 
     const memChartOption = {
         title: {
-            text: '链路数据包统计'
+            text: 'Link Packet Statistics'
         },
         tooltip: {},
         legend: {
-            data:['发送数据包','接收数据包','发送丢包量','接收丢包量','发送错误包','接收错误包']
+            data:['Sent Packets','Received Packets','Sent Packet Loss','Received Packet Loss','Sent Error Packets','Received Error Packets']
         },
         xAxis: {
             data: linkResource[linkID]?linkResource[linkID].map((item)=>{
@@ -162,32 +162,32 @@ export const LinkDetailPage = () => {
         yAxis: {},
         series: [
             {
-                name: '发送数据包',
+                name: 'Sent Packets',
                 type:'line',
                 data: linkResource[linkID]?linkResource[linkID].map((item)=>item.send_pps):[]
             },
             {
-                name: '接收数据包',
+                name: 'Received Packets',
                 type:'line',
                 data: linkResource[linkID]?linkResource[linkID].map((item)=>item.recv_pps):[]
             },
             {
-                name: '发送丢包量',
+                name: 'Sent Packet Loss',
                 type:'line',
                 data: linkResource[linkID]?linkResource[linkID].map((item)=>item.send_drop_pps):[]
             },
             {
-                name: '接收丢包量',
+                name: 'Received Packet Loss',
                 type:'line',
                 data: linkResource[linkID]?linkResource[linkID].map((item)=>item.recv_drop_pps):[]
             },
             {
-                name: '发送错误包',
+                name: 'Sent Error Packets',
                 type:'line',
                 data: linkResource[linkID]?linkResource[linkID].map((item)=>item.send_err_pps):[]
             },
             {
-                name: '接收错误包',
+                name: 'Received Error Packets',
                 type:'line',
                 data: linkResource[linkID]?linkResource[linkID].map((item)=>item.recv_err_pps):[]
             }
@@ -199,7 +199,7 @@ export const LinkDetailPage = () => {
         <div>
             <Row justify="center">
                 <Col>
-                    <Typography.Title level={2} >链路详情:{linkID}</Typography.Title>
+                    <Typography.Title level={2} >Link Details:{linkID}</Typography.Title>
                 </Col>
             </Row>
             <Row justify="center">
@@ -211,7 +211,7 @@ export const LinkDetailPage = () => {
                 
             </Row>
             <Divider/>
-            <Row justify="center"> <Typography.Title level={4}>资源监控</Typography.Title> </Row>
+            <Row justify="center"> <Typography.Title level={4}>Resource Monitoring</Typography.Title> </Row>
             <Row justify="center"> 
             <Select
                 defaultValue={resourcePeriod}
@@ -223,15 +223,15 @@ export const LinkDetailPage = () => {
                     })
                 }}
                 options={[
-                    { value: '1m', label: '过去一分钟' },
-                    { value: '5m', label: '过去五分钟' },
-                    { value: '10m', label: '过去十分钟' },
-                    { value: '30m', label: '过去三十分钟' },
-                    { value: '1h', label: '过去一小时' },
-                    { value: '3h', label: '过去三小时' },
-                    { value: '6h', label: '过去六小时' },
-                    { value: '12h', label: '过去十二小时' },
-                    { value: '24h', label: '过去二十四小时' },
+                    { value: '1m', label: 'Last 1 Minute' },
+                    { value: '5m', label: 'Last 5 Minutes' },
+                    { value: '10m', label: 'Last 10 Minutes' },
+                    { value: '30m', label: 'Last 30 Minutes' },
+                    { value: '1h', label: 'Last 1 Hour' },
+                    { value: '3h', label: 'Last 3 Hours' },
+                    { value: '6h', label: 'Last 6 Hours' },
+                    { value: '12h', label: 'Last 12 Hours' },
+                    { value: '24h', label: 'Last 24 Hours' },
                 ]}
             />
             </Row>
@@ -257,7 +257,7 @@ export const LinkDetailPage = () => {
             <Divider/>
             
             <Row justify="center" >
-            <Typography.Title level={4}>抓包信息</Typography.Title>
+            <Typography.Title level={4}>Packet Capture Information</Typography.Title>
             </Row>
             <Row justify="center">
             <Button enable={linkDumpUrl===""} onClick={()=>{
@@ -266,7 +266,7 @@ export const LinkDetailPage = () => {
                     const webShellUrl = `http://${linkWebshellInfo.addr}:${linkWebshellInfo.port}`
                     setLinkDumpUrl(webShellUrl)
                 })
-            }}>启动抓包</Button>
+            }}>Start Packet Capture</Button>
             </Row>
             <Card style={{width:"90vw",marginLeft:"5vw",marginRight:"5vw"}}>
             <Row justify="center" ><iframe style={{width:"80vw",height:"720px"}} enable={linkDumpUrl!==""} src={linkDumpUrl===""?"":linkDumpUrl}/></Row>

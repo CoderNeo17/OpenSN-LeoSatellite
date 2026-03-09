@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/docker/docker/api/types"
+	// "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/sirupsen/logrus"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -76,7 +76,7 @@ func StartContainer(instance *model.Instance) (int, error) {
 		return utils.DockerClient.ContainerStart(
 			context.Background(),
 			containerID,
-			types.ContainerStartOptions{},
+			container.StartOptions{},
 		)
 	}, 4)
 	if err != nil {
@@ -125,7 +125,7 @@ func RemoveContainer(instance *model.Instance) error {
 		return utils.DockerClient.ContainerRemove(
 			context.Background(),
 			containerID,
-			types.ContainerRemoveOptions{Force: true},
+			container.RemoveOptions{Force: true},
 		)
 	}, 4)
 

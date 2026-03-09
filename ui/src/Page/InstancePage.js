@@ -22,8 +22,8 @@ export const InstanceListPage = () => {
             }}
             header = {
                 <div style={{height:"70px"}} >
-                    <Typography.Title level={4}>网络节点列表</Typography.Title>
-                    <Button>添加节点</Button>
+                    <Typography.Title level={4}>Network Node List</Typography.Title>
+                    <Button>Add Node</Button>
                 </div>
                 
             }
@@ -38,17 +38,17 @@ export const InstanceListPage = () => {
                                 let url = `/instance/${item.node_index}/${item.instance_id}`
                                 w.location.href = url
                             }}
-                        >查看详情</Button>,
+                        >View Details</Button>,
 
                         <Button
                             onClick={item.enable?
                                 ()=>{}:
                                 ()=>{}
                             }
-                        >{item.start?"停止":"启动"}</Button>,,
-                        <Button>删除</Button>
+                        >{item.start?"Stop":"Start"}</Button>,,
+                        <Button>Delete</Button>
                     ]}>
-                        <List.Item.Meta title={`机器编号${item.node_index} ${item.type}-${item.instance_id}: ${item.start?"已启动":"已停止"}`}/>
+                        <List.Item.Meta title={`Machine Number ${item.node_index} ${item.type}-${item.instance_id}: ${item.start?"Started":"Stopped"}`}/>
                         
                     </List.Item>
                 )

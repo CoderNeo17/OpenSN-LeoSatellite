@@ -11,7 +11,7 @@ export const TopologyConfiguratorPage = () => {
     },[])
     return (
        <Row justify="center">
-        {codeServerUrl===""?<Typography.Title>未启动Web配置编辑器</Typography.Title>: <iframe  style={{width:"96vw",height:"84vh"}} src={codeServerUrl}/>}
+        {codeServerUrl===""?<Typography.Title>Web Configuration Editor Not Started</Typography.Title>: <iframe  style={{width:"96vw",height:"84vh"}} src={codeServerUrl}/>}
        
        </Row>
     )

@@ -1,11 +1,13 @@
+.PHONY : build
+
 build:
-	-mkdir opensn_build
-	cd ui && make build
+	mkdir opensn_build
+	cd ui && make build && cd ..
 	mkdir -p daemon/share/static/dist/
 	cp -r ui/build/ daemon/share/static/dist/
-	cd container-base && make build
-	cd dependencies && make build
-	cd daemon && make build
+	cd container-base && make build && cd ..
+	cd dependencies && make build && cd ..
+	cd daemon && make build && cd ..
 	mkdir -p opensn_build/node-images
 	sudo cp container-base/*.tar.gz opensn_build/node-images/
 	sudo cp -r daemon/opensn-daemon opensn_build/

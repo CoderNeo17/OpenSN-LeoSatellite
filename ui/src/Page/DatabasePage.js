@@ -73,7 +73,7 @@ export const DatabasePage = () => {
             <Row justify="space-between" style={{height:"100%"}} >
                 <Col style={{height:"100%"}}>
                     <Card style={{width:"20vw",height:"80vh"}}>
-                        <Typography.Title level={4}>数据库键列表</Typography.Title>
+                        <Typography.Title level={4}>Database Key List</Typography.Title>
                         <Tree
                             style={{height:"65vh",overflowY:"auto"}}
                             showLine={showLine ? { showLeafIcon } : false}
@@ -87,7 +87,7 @@ export const DatabasePage = () => {
                 <Col style={{height:"100%"}}>
                 
                 <Card style={{width:"70vw",height:"80vh"}}>
-                <Typography.Title level={4}>数据库条目</Typography.Title>
+                <Typography.Title level={4}>Database Entry</Typography.Title>
                     <VanillaJSONEditor
                         style={{height:"70vh"}}
                         content={editorContent}
@@ -104,7 +104,7 @@ export const DatabasePage = () => {
                                 console.log(response)
                             })
                         }}
-                    >提交</Button>
+                    >Submit</Button>
                     <Button type="primary" style={{marginRight:"10px",marginLeft:"10px"}}
                         onClick={()=>{
                             DeleteDatabaseItem({
@@ -113,7 +113,7 @@ export const DatabasePage = () => {
                                 console.log(response)
                             })
                         }}
-                    >删除</Button>
+                    >Delete</Button>
                 </Card>
                 </Col>
             </Row>

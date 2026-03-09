@@ -20,42 +20,42 @@ Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMTg2O
 const topBarItems = [
     {
         key:"overview",
-        label: `概览`,
+        label: `Overview`,
     },
     {
       key:"instances",
-      label: `节点`,
+      label: `Nodes`,
     },
     {
       key:"links",
-      label: `链路`,
+      label: `Links`,
     },
     {
       key:"topo_conf",
-      label: `运行配置器`,
+      label: `Run Configurator`,
     },
     {
         key:"mount_manager",
-        label: `文件管理`,
+        label: `File Management`,
     },
     {
       key:"cluster",
-      label: `部署机器`,
+      label: `Deployment Machines`,
     },
     {
       key:"database",
-      label: `查看数据库`,
+      label: `View Database`,
     },
     {
         key:"help",
         label: (<a href="/help" target="_blank">
-                  帮助文档<ExportOutlined />
+                  Help Document<ExportOutlined />
                 </a>),
     },
     {
         key:"about",
         label: (<a href="/about" target="_blank">
-                  关于<ExportOutlined />
+                  About<ExportOutlined />
                 </a>),
     }
 ];

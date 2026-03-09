@@ -24,7 +24,7 @@ export const InstanceTypeDrawer = ({dataBuf,setDataBuf,open,setOpen}) => {
 
   return (
     <Drawer
-        title="添加实例类型"
+        title="Add Instance Type"
         width={400}
         onClose={onClose}
         open={open}
@@ -35,22 +35,22 @@ export const InstanceTypeDrawer = ({dataBuf,setDataBuf,open,setOpen}) => {
         }}
         extra={
           <Space>
-            <Button onClick={onClose}>取消</Button>
+            <Button onClick={onClose}>Cancel</Button>
             <Button onClick={onConfirm} type="primary">
-              确认
+              Confirm
             </Button>
           </Space>
         }
       >
         <Typography.Paragraph>
-          <Typography.Text strong>实例类型: </Typography.Text>
+          <Typography.Text strong>Instance Type: </Typography.Text>
           <Input type="text" style={{width:"200px"}} onChange={(e) => {
               setTypeName(e.target.value);
           }} />
         </Typography.Paragraph>
         <Divider/>
         <Typography.Paragraph>
-          <Typography.Text strong>镜像名称: </Typography.Text>
+          <Typography.Text strong>Image Name: </Typography.Text>
           <Input type="text" style={{width:"200px"}} onChange={(e) => {
               setImageName(e.target.value);
           }} />
@@ -58,14 +58,14 @@ export const InstanceTypeDrawer = ({dataBuf,setDataBuf,open,setOpen}) => {
         <Divider/>
         <Typography.Paragraph>
           <div>
-            <Typography.Text strong>CPU限额(1e-9 Core): </Typography.Text>
+            <Typography.Text strong>CPU Limit (1e-9 Core): </Typography.Text>
             <Input type="text" style={{width:"200px"}} onChange={(e) => {
                 resourceLimit.nano_cpu = e.target.value;
                 setResourceLimit(resourceLimit);
             }} />
           </div>
           <div>
-            <Typography.Text strong>内存限额(Byte): </Typography.Text>
+            <Typography.Text strong>Memory Limit (Byte): </Typography.Text>
             <Input type="text" style={{width:"200px"}} onChange={(e) => {
                 resourceLimit.memory_byte = e.target.value;
                 setResourceLimit(resourceLimit);
@@ -73,7 +73,7 @@ export const InstanceTypeDrawer = ({dataBuf,setDataBuf,open,setOpen}) => {
           </div>
         </Typography.Paragraph>
         <Typography.Paragraph>
-          "限额必须为整数, 可以以[K|M|G|T]为结尾单位, 不区分大小写"
+          "Limit must be an integer, can end with [K|M|G|T] units, case insensitive"
         </Typography.Paragraph>
       </Drawer>
   );

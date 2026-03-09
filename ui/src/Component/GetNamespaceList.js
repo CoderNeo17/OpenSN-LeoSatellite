@@ -8,7 +8,7 @@ export const NamespaceList = () => {
         <List
                 bordered
                 header={<div style={{height:"30px"}}>
-                        <Typography.Text strong style={{float:"left"}}>命名空间列表</Typography.Text>
+                        <Typography.Text strong style={{float:"left"}}>Namespace List</Typography.Text>
                         </div>}
                 direction="vertical"
                 dataSource={namespaceList}
@@ -16,23 +16,23 @@ export const NamespaceList = () => {
                     <List.Item>
                     <Card>
                         <Card.Meta
-                            title={`命名空间名称: ${item.name}-${item.running?"运行中":"停止中"}`}
+                            title={`Namespace Name: ${item.name}-${item.running?"Running":"Stopped"}`}
                         />
                         <Divider/>
                         <div>
                         <Typography.Paragraph>
                             <Typography.Text>
-                                {`命名空间容器实例数:${item.instance_num}`}
+                                {`Namespace Container Instance Count:${item.instance_num}`}
                             </Typography.Text>
                         </Typography.Paragraph>
                         <Typography.Paragraph>
                             <Typography.Text>
-                                {`命名空间链路数:${item.link_num}`}
+                                {`Namespace Link Count:${item.link_num}`}
                             </Typography.Text>
                         </Typography.Paragraph>
                         <Typography.Paragraph>
                             <Typography.Text>
-                                {`命名空间分配计算节点列表:${item.running?JSON.stringify(item.alloc_node_index):"未运行"}`}
+                                {`Namespace Allocated Compute Node List:${item.running?JSON.stringify(item.alloc_node_index):"Not Running"}`}
                             </Typography.Text>
                         </Typography.Paragraph>
                        
@@ -44,14 +44,14 @@ export const NamespaceList = () => {
                                     
                                 }}
                             >
-                                {item.running?"停止":"启动"}
+                                {item.running?"Stop":"Start"}
                             </Button>
-                            <Button>编辑</Button>
+                            <Button>Edit</Button>
                             <Button
                                 onClick={()=>{
                                     window.open(`/namespace/${item.name}/detail`, "_blank")
                                 }}
-                            >详细信息</Button>
+                            >Details</Button>
                         </div>
                     </Card>
                    

@@ -22,7 +22,7 @@ export const ContainerEnvDrawer = ({dataBuf,setDataBuf,open,setOpen}) => {
 
   return (
     <Drawer
-        title="添加初始化环境变量"
+        title="Add Initial Environment Variables"
         width={400}
         onClose={onClose}
         open={open}
@@ -33,21 +33,21 @@ export const ContainerEnvDrawer = ({dataBuf,setDataBuf,open,setOpen}) => {
         }}
         extra={
           <Space>
-            <Button onClick={onClose}>取消</Button>
+            <Button onClick={onClose}>Cancel</Button>
             <Button onClick={onConfirm} type="primary">
-              确认
+              Confirm
             </Button>
           </Space>
         }
       >
         <Typography.Paragraph>
-          <Typography.Text strong>环境变量Key: </Typography.Text>
+          <Typography.Text strong>Environment Variable Key: </Typography.Text>
           <Input type="text" style={{width:"200px"}} onChange={(e) => {
               setEnvKey(e.target.value)
           }} />
         </Typography.Paragraph>
         <Typography.Paragraph>
-          <Typography.Text strong>环境变量Value: </Typography.Text>
+          <Typography.Text strong>Environment Variable Value: </Typography.Text>
           <Input type="text" style={{width:"200px"}} onChange={(e) => {
               setEnvValue(e.target.value)
           }} />

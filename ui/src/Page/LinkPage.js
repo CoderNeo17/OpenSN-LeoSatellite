@@ -23,8 +23,8 @@ export const LinkListPage = () => {
             }}
             header = {
                 <div style={{height:"70px"}} >
-                    <Typography.Title level={4}>链路列表</Typography.Title>
-                    <Button>添加链路</Button>
+                    <Typography.Title level={4}>Link List</Typography.Title>
+                    <Button>Add Link</Button>
                 </div>
                 
             }
@@ -38,16 +38,16 @@ export const LinkListPage = () => {
                                 let url = `/link/${item.node_index}/${item.link_id}`
                                 w.location.href = url
                             }}
-                        >查看详情</Button>,
+                        >View Details</Button>,
                         <Button
                             onClick={item.enable?
                                 ()=>{}:
                                 ()=>{}
                             }
-                        >{item.enable?"禁用":"启用"}</Button>,
-                        <Button>删除</Button>
+                        >{item.enable?"Disable":"Enable"}</Button>,
+                        <Button>Delete</Button>
                     ]}>
-                        <List.Item.Meta title={`${item.type}-${item.link_id}: ${item.enable?"已启用":"已禁用"}`}/>
+                        <List.Item.Meta title={`${item.type}-${item.link_id}: ${item.enable?"Enabled":"Disabled"}`}/>
                         
                     </List.Item>
                 )

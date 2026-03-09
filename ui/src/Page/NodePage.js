@@ -12,41 +12,41 @@ export const NodeList = () => {
         <List
                 bordered
                 header={<div style={{height:"30px"}}>
-                        <Typography.Text strong style={{float:"left"}}>计算节点列表</Typography.Text>
+                        <Typography.Text strong style={{float:"left"}}>Compute Node List</Typography.Text>
                         </div>}
                 dataSource={nodeList}
                 renderItem={(item,index) => 
                     <List.Item>
                     <Card>
                         <Card.Meta
-                            title={`节点编号: ${item.node_index}-${item.is_master_node?"主节点":"从节点"}`}
+                            title={`Node Number: ${item.node_index}-${item.is_master_node?"Master Node":"Slave Node"}`}
                         />
                         <Divider/>
                         <div>
                         <Typography.Paragraph>
                             <Typography.Text>
-                                {`剩余可分配容器数:${item.free_instance}`}
+                                {`Remaining Allocatable Containers: ${item.free_instance}`}
                             </Typography.Text>
                         </Typography.Paragraph>
                         <Typography.Paragraph>
                             <Typography.Text>
-                                {`IPv4地址:${item.l_3_addr_v_4}`}
+                                {`IPv4 Address: ${item.l_3_addr_v_4}`}
                             </Typography.Text>
                         </Typography.Paragraph>
                         <Typography.Paragraph>
                             <Typography.Text>
-                                {`IPv6地址:${item.l_3_addr_v_6}`}
+                                {`IPv6 Address: ${item.l_3_addr_v_6}`}
                             </Typography.Text>
                         </Typography.Paragraph>
                         <Typography.Paragraph>
                             <Typography.Text>
-                                {`MAC地址:${item.l_2_addr}`}
+                                {`MAC Address: ${item.l_2_addr}`}
                             </Typography.Text>
                         </Typography.Paragraph>
                         </div>
                         
                         {/* <div>
-                            <Button>详细信息</Button>
+                            <Button>Details</Button>
                         </div> */}
                     </Card>
                    

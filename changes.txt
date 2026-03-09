@@ -1,0 +1,148 @@
+UNCOMMITTED CHANGES SUMMARY
+===========================
+
+1. .gitignore
+   - Added two new directories to the ignore list:
+     * opensn_build_1
+     * opensn-env
+
+2. Makefile (Root)
+   - Added .PHONY declaration for build target
+   - Fixed mkdir to remove '-' flag (changed from '-mkdir' to 'mkdir')
+   - Added '&& cd ..' to return to root directory after each subdirectory build
+   - Updated build sequence: ui → container-base → dependencies → daemon
+
+3. TopoConfigurators/Standard/Makefile
+   - Updated ADDR IP address from 10.134.148.56 to 10.42.80.152
+   - PORT remains 8080
+
+4. container-base/build-base/Dockerfile
+   - Updated base image from ubuntu:22.04 to ubuntu:24.04
+
+5. daemon/config/config.json
+   - Changed interface_name from "ens160" to "wlp1s0"
+   - This affects network interface detection for the daemon
+
+6. daemon/share/static/dist/version.txt
+   - Updated build commit hash and timestamp
+
+7. dependencies/custom-etcd/Dockerfile
+   - Major refactoring of etcd container configuration
+   - Changed base image from 'bitnami/etcd' to 'quay.io/coreos/etcd:v3.5.9'
+   - Reorganized environment variables with comments
+   - Added new environment variables:
+     * ETCD_INITIAL_CLUSTER_STATE=new
+     * ETCD_INITIAL_CLUSTER_TOKEN=opensn-etcd
+   - Changed data directory from '/opt/bitnami/etcd/data' to '/etcd-data'
+   - Exposed port 2380 in addition to 2379
+   - Added explicit CMD instruction: CMD ["etcd"]
+
+NOTE: UI folder changes (27 files modified) are excluded as requested.
+
+================================================================================
+DETAILED CODE CHANGES (FOR REPLICATION)
+================================================================================
+
+--- FILE: .gitignore ---
+@@ -28,4 +28,6 @@ daemon/build
+ daemon/opensn-daemon
+ tools/namespace-generator/generator
+ daemon/share/static/
+-opensn_build
+\ No newline at end of file
++opensn_build
++opensn_build_1
++opensn-env
+\ No newline at end of file
+
+
+--- FILE: Makefile ---
+@@ -1,11 +1,13 @@
++.PHONY : build
++
+ build:
+-       -mkdir opensn_build
+-       cd ui && make build
++       mkdir opensn_build
++       cd ui && make build && cd ..
+        mkdir -p daemon/share/static/dist/
+        cp -r ui/build/ daemon/share/static/dist/
+-       cd container-base && make build
+-       cd dependencies && make build
+-       cd daemon && make build
++       cd container-base && make build && cd ..
++       cd dependencies && make build && cd ..
++       cd daemon && make build && cd ..
+        mkdir -p opensn_build/node-images
+        sudo cp container-base/*.tar.gz opensn_build/node-images/
+        sudo cp -r daemon/opensn-daemon opensn_build/
+
+
+--- FILE: TopoConfigurators/Standard/Makefile ---
+@@ -1,2 +1,2 @@
+ run:
+-       export ADDR=10.134.148.56 PORT=8080 && python3 main.py
++       export ADDR=10.42.80.152 PORT=8080 && python3 main.py 
+// this  ip has to be updated everytime with the i assigned to the daemon at runtime
+
+
+--- FILE: container-base/build-base/Dockerfile ---
+@@ -1,4 +1,4 @@
+-FROM ubuntu:22.04
++FROM ubuntu:24.04
+ 
+ ENV TZ=Asia/Shanghai
+ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+
+--- FILE: daemon/config/config.json ---
+@@ -5,7 +5,7 @@
+     "listen_port": 8080,
+     "enable_monitor": true,
+     "enable_code_server": true,
+-    "interface_name": "ens160",
++    "interface_name": "wlp1s0", 
+     "debug": false,
+     "instance_capacity": 1800,
+     "monitor_interval": 1,
+
+
+--- FILE: daemon/share/static/dist/version.txt --- 
+////ignore this file
+@@ -1 +1 @@
+-Build Commit:4c6525f2bffa1d45faa2083d3d5cefbcef2decdb, Build Time:2024年 11月 13日 星期三 18:48:22 CST, Arch:amd64-linux
++Build Commit:4198a1734657bae169079b07634d812f438d3ba3, Build Time:Fri Jan 23 12:19:42 PM IST 2026, Arch:amd64-linux
+
+
+--- FILE: dependencies/custom-etcd/Dockerfile ---
+@@ -1,10 +1,21 @@
+-FROM bitnami/etcd
+-ENV ETCD_ADVERTISE_CLIENT_URLS=http://0.0.0.0:2379
++FROM quay.io/coreos/etcd:v3.5.9
++
++# Client + peer URLs
+ ENV ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+-ENV ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380 
+-ENV ETCD_INITIAL_ADVERTISE_PEER_URLS=http://0.0.0.0:2380 
+-ENV ALLOW_NONE_AUTHENTICATION=yes 
+-ENV ETCD_INITIAL_CLUSTER=emulator_etcd=http://0.0.0.0:2380 
++ENV ETCD_ADVERTISE_CLIENT_URLS=http://0.0.0.0:2379
++ENV ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
++ENV ETCD_INITIAL_ADVERTISE_PEER_URLS=http://0.0.0.0:2380
++
++# Single-node cluster config
+ ENV ETCD_NAME=emulator_etcd
+-ENV ETCD_DATA_DIR=/opt/bitnami/etcd/data 
+-EXPOSE 2379
+\ No newline at end of file
++ENV ETCD_INITIAL_CLUSTER=emulator_etcd=http://0.0.0.0:2380
++ENV ETCD_INITIAL_CLUSTER_STATE=new
++ENV ETCD_INITIAL_CLUSTER_TOKEN=opensn-etcd
++
++# Data dir (CoreOS default)
++ENV ETCD_DATA_DIR=/etcd-data
++
++EXPOSE 2379 2380
++
++# Explicit command (IMPORTANT)
++CMD ["etcd"]

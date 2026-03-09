@@ -19,7 +19,7 @@ export function CreateNamespaceForm() {
     return (
         <div style={{height:"100%",overflowY:"scroll"}}>
             {contextHolder}
-            <Typography.Title level={2}>创建命名空间</Typography.Title>
+            <Typography.Title level={2}>Create Namespace</Typography.Title>
             <Divider dashed />
             <Tabs defaultActiveKey="1" 
                 tabPosition="left" 
@@ -42,14 +42,14 @@ export function CreateNamespaceForm() {
                                                         setDataBuf(dataBuf);
                                                     }catch (e) {
                                                         console.error(e);
-                                                        NotificationWithIcon("error","导入失败","Error:"+e.toString());
+                                                        NotificationWithIcon("error","Import Failed","Error:"+e.toString());
                                                     }
                                                 };
                                                 reader.readAsText(fileObj);
-                                                NotificationWithIcon("success","导入成功","成功导入配置文件");
+                                                NotificationWithIcon("success","Import Successful","Successfully Imported Configuration File");
                                             } catch (e) {
                                                 console.error(e);
-                                                NotificationWithIcon("error","导入失败","Error:"+e.toString());
+                                                NotificationWithIcon("error","Import Failed","Error:"+e.toString());
                                             }
                                         }}
                                     />
@@ -59,7 +59,7 @@ export function CreateNamespaceForm() {
                                             inputRef.current.click();
                                         }}
                                     >
-                                        导入
+                                        Import
                                     </Button>
                                 </div>
                                 <div>
@@ -77,36 +77,36 @@ export function CreateNamespaceForm() {
                                             URL.revokeObjectURL(objectURL)
                                         }}
                                     >
-                                        导出
+                                        Export
                                     </Button>
                                 </div>
                             </div>,
                     "right":<Button onClick={()=>{
                         
-                            NotificationWithIcon("success","创建成功","成功创建命名空间")
+                            NotificationWithIcon("success","Creation Successful","Successfully Created Namespace")
                         
                     }}> 
-                        确认
+                        Confirm
                     </Button>  
                    }}
                 items = {[
                     {
                         key :"Basic",
-                        label :"基本配置",
+                        label :"Basic Configuration",
                         children : <div >
                             <ConfigNamespaceBasic  dataBuf={dataBuf} setDataBuf={setDataBuf}/>
                         </div> 
                     },
                     {
                         key :"Instance",
-                        label :"容器实例配置",
+                        label :"Container Instance Configuration",
                         children : <div >
                             <ConfigNamespaceInstance  dataBuf={dataBuf} setDataBuf={setDataBuf}/>
                         </div> 
                     },
                     {
                         key :"Link",
-                        label :"链路实例配置",
+                        label :"Link Instance Configuration",
                         children : <div >
                             <ConfigNamespaceLink  dataBuf={dataBuf} setDataBuf={setDataBuf}/>
                         </div> 
