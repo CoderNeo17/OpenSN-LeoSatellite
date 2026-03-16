@@ -796,9 +796,9 @@
       "type": "GroundStation",
       "extra": {
         "GroundStationIndex": "0",
-        "latitude": "-83.27464846170668",
-        "longitude": "-81.87301750454633",
-        "altitude": "9.890920382031759"
+        "latitude": "13.0827",
+        "longitude": "80.2707",
+        "altitude": "6.0"
       },
       "device_info": {}
     },
@@ -806,9 +806,29 @@
       "type": "GroundStation",
       "extra": {
         "GroundStationIndex": "1",
-        "latitude": "-17.62366560139992",
-        "longitude": "100.39873632660061",
-        "altitude": "6.6905849268555695"
+        "latitude": "28.6139",
+        "longitude": "77.2090",
+        "altitude": "6.0"
+      },
+      "device_info": {}
+    },
+    {
+      "type": "GroundTerminal",
+      "extra": {
+        "GroundTerminalIndex": "0",
+        "latitude": "13.0500",
+        "longitude": "80.2100",
+        "altitude": "12.0"
+      },
+      "device_info": {}
+    },
+    {
+      "type": "GroundTerminal",
+      "extra": {
+        "GroundTerminalIndex": "1",
+        "latitude": "28.5800",
+        "longitude": "77.1500",
+        "altitude": "12.0"
       },
       "device_info": {}
     }
