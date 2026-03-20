@@ -1,9 +1,11 @@
 
 # Link Parameter Keys
-PARAMETER_KEY_CONNECT = "connect"
-PARAMETER_KEY_DELAY = "delay"
-PARAMETER_KEY_LOSS = "loss"
-PARAMETER_KEY_BANDWIDTH = "bandwidth"
+PARAMETER_KEY_CONNECT           = "connect"
+PARAMETER_KEY_DELAY             = "delay"
+PARAMETER_KEY_LOSS              = "loss"
+PARAMETER_KEY_BANDWIDTH         = "bandwidth"
+PARAMETER_KEY_UPLINK_BANDWIDTH  = "uplink_bandwidth"
+PARAMETER_KEY_DOWNLINK_BANDWIDTH = "downlink_bandwidth"
 
 # Link Json Object Fields
 LINK_CONFIG_FIELD = "config"

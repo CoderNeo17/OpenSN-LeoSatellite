@@ -1,7 +1,11 @@
 from opensn.operator.emulator_operator import EmulatorOperator
 from opensn.model.instance import Instance
 from opensn.model.position import Position
-from opensn.const.dict_fields import PARAMETER_KEY_CONNECT,PARAMETER_KEY_DELAY,PARAMETER_KEY_BANDWIDTH,PARAMETER_KEY_LOSS
+from opensn.const.dict_fields import (
+    PARAMETER_KEY_CONNECT, PARAMETER_KEY_DELAY,
+    PARAMETER_KEY_BANDWIDTH, PARAMETER_KEY_LOSS,
+    PARAMETER_KEY_UPLINK_BANDWIDTH, PARAMETER_KEY_DOWNLINK_BANDWIDTH
+)
 from opensn.model.link import LinkBase
 from opensn.utils.tools import dec2ra
 from config import ADDR,PORT
@@ -227,7 +231,20 @@ if __name__ == "__main__":
                 )
                 delay = int(get_propagation_delay_s(distance)*1000000)
                 link_info.parameter[PARAMETER_KEY_DELAY] = delay
-                link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1000000
+                end0_type = link_info.end_infos[0].instance_type
+                end1_type = link_info.end_infos[1].instance_type
+                is_gsl = (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_STATION) or \
+                        (end0_type == TYPE_GROUND_STATION and end1_type == TYPE_SATELLITE)
+
+                if is_gsl:
+                    # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)
+                    # End 0 is always satellite in your link model, so:
+                    link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = 5_000_000   # 5 Mbps
+                    link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = 20_000_000  # 20 Mbps
+                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 0
+                else:
+                    # ISL: keep symmetric
+                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1_000_000
                 link_info.parameter[PARAMETER_KEY_LOSS] = 150
                 cli.put_link_parameter(link_info.node_index,link_info.link_id,link_info.parameter)
 

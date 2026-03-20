@@ -13,9 +13,11 @@ import (
 const VirtualLinkType = "vlink"
 
 const (
-	VethDelayParameter     = "delay"
-	VethLossParameter      = "loss"
-	VethBandwidthParameter = "bandwidth"
+    VethDelayParameter         = "delay"
+    VethLossParameter          = "loss"
+    VethBandwidthParameter     = "bandwidth"      // keep for backward compat
+    VethUplinkBandwidth        = "uplink_bandwidth"
+    VethDownlinkBandwidth      = "downlink_bandwidth"
 )
 
 var VirtualLinkParameterMap = map[string]model.ParameterInfo{
@@ -41,20 +43,34 @@ var VirtualLinkParameterMap = map[string]model.ParameterInfo{
 		DefinitionFrac: 1,
 		DefaultVal:     0,
 	},
+	VethUplinkBandwidth: {
+		Name:           VethUplinkBandwidth,
+		MinVal:         0,
+		MaxVal:         1e10,
+		DefinitionFrac: 1,
+		DefaultVal:     0,
+	},
+	VethDownlinkBandwidth: {
+		Name:           VethDownlinkBandwidth,
+		MinVal:         0,
+		MaxVal:         1e10,
+		DefinitionFrac: 1,
+		DefaultVal:     0,
+	},
 }
 
 var TbfQdiscTemplate = netlink.Tbf{
-	QdiscAttrs: netlink.QdiscAttrs{
-		Handle: netlink.MakeHandle(2, 0),
-		Parent: netlink.MakeHandle(1, 0),
-	},
+    QdiscAttrs: netlink.QdiscAttrs{
+        Handle: netlink.MakeHandle(1, 0),
+        Parent: netlink.HANDLE_ROOT,
+    },
 }
 var NetemQdiscTemplate = netlink.NewNetem(
-	netlink.QdiscAttrs{
-		Handle: netlink.MakeHandle(1, 0),
-		Parent: netlink.HANDLE_ROOT,
-	},
-	netlink.NetemQdiscAttrs{},
+    netlink.QdiscAttrs{
+        Handle: netlink.MakeHandle(2, 0),
+        Parent: netlink.MakeHandle(1, 0),
+    },
+    netlink.NetemQdiscAttrs{},
 )
 
 type VethLink struct {
@@ -325,7 +341,9 @@ func (l *VethLink) SetParameters(oldPara, newPara map[string]int64) error {
 		if paraValue != oldPara[paraName] {
 			if paraName == model.ConnectParameter {
 				dirtyConnect = true
-			} else if paraName == VethBandwidthParameter {
+			} else if paraName == VethBandwidthParameter ||
+					paraName == VethUplinkBandwidth ||
+					paraName == VethDownlinkBandwidth {
 				dirtyTbf = true
 			} else {
 				dirtyNetem = true
@@ -387,21 +405,42 @@ func (l *VethLink) SetParameters(oldPara, newPara map[string]int64) error {
 				}
 				dev, err := netlink.LinkByName(fmt.Sprintf("%s-%d", l.GetLinkID(), i))
 				if err != nil {
-					logrus.Errorf("Update tbf qdisc error: get link by name %s error: %s", fmt.Sprintf("%s-%d", l.GetLinkID(), i), err.Error())
+					logrus.Errorf("Update tbf qdisc error: get link by name %s error: %s",
+						fmt.Sprintf("%s-%d", l.GetLinkID(), i), err.Error())
 					return err
 				}
+
+				// Determine which bandwidth to apply to this end's egress.
+				// End 0 egress = downlink (satellite → ground), controlled by downlink_bandwidth.
+				// End 1 egress = uplink (ground → satellite), controlled by uplink_bandwidth.
+				var bw int64
+				if uplinkBw, hasUplink := newPara[VethUplinkBandwidth]; hasUplink {
+					if i == 0 {
+						// end-0 egress is downlink
+						bw = newPara[VethDownlinkBandwidth]
+					} else {
+						// end-1 egress is uplink
+						bw = uplinkBw
+					}
+				} else {
+					// Fall back to symmetric bandwidth
+					bw = newPara[VethBandwidthParameter]
+				}
+
+				if bw <= 0 {
+					continue
+				}
+
 				tbfInfo := TbfQdiscTemplate
 				tbfInfo.LinkIndex = dev.Attrs().Index
-				tbfInfo.Limit = uint32(newPara[VethBandwidthParameter])
-				tbfInfo.Rate = uint64(newPara[VethBandwidthParameter])
-				tbfInfo.Buffer = uint32(newPara[VethBandwidthParameter]) / 8
+				tbfInfo.Limit = uint32(bw)
+				tbfInfo.Rate = uint64(bw)
+				tbfInfo.Buffer = uint32(bw) / 8
 
 				err = netlink.QdiscReplace(&tbfInfo)
 				if err != nil {
-
 					logrus.Errorf("Set tbf qdisc error: %s", err.Error())
 					return err
-
 				}
 			}
 		}
