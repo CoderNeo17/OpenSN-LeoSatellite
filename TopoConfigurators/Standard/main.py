@@ -234,7 +234,9 @@ if __name__ == "__main__":
                 end0_type = link_info.end_infos[0].instance_type
                 end1_type = link_info.end_infos[1].instance_type
                 is_gsl = (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_STATION) or \
-                        (end0_type == TYPE_GROUND_STATION and end1_type == TYPE_SATELLITE)
+                        (end0_type == TYPE_GROUND_STATION and end1_type == TYPE_SATELLITE) or \
+                        (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_TERMINAL) or \
+                        (end0_type == TYPE_GROUND_TERMINAL and end1_type == TYPE_SATELLITE)
 
                 if is_gsl:
                     # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)

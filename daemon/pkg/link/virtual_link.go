@@ -61,14 +61,14 @@ var VirtualLinkParameterMap = map[string]model.ParameterInfo{
 
 var TbfQdiscTemplate = netlink.Tbf{
     QdiscAttrs: netlink.QdiscAttrs{
-        Handle: netlink.MakeHandle(1, 0),
-        Parent: netlink.HANDLE_ROOT,
+        Handle: netlink.MakeHandle(2, 0),
+        Parent: netlink.MakeHandle(1, 0), // child of netem
     },
 }
 var NetemQdiscTemplate = netlink.NewNetem(
     netlink.QdiscAttrs{
-        Handle: netlink.MakeHandle(2, 0),
-        Parent: netlink.MakeHandle(1, 0),
+        Handle: netlink.MakeHandle(1, 0),
+        Parent: netlink.HANDLE_ROOT,      // netem is root
     },
     netlink.NetemQdiscAttrs{},
 )
@@ -433,9 +433,9 @@ func (l *VethLink) SetParameters(oldPara, newPara map[string]int64) error {
 
 				tbfInfo := TbfQdiscTemplate
 				tbfInfo.LinkIndex = dev.Attrs().Index
-				tbfInfo.Limit = uint32(bw)
-				tbfInfo.Rate = uint64(bw)
-				tbfInfo.Buffer = uint32(bw) / 8
+				tbfInfo.Rate   = uint64(bw / 8)
+				tbfInfo.Limit  = uint32(bw / 8)
+				tbfInfo.Buffer = uint32(bw/8)
 
 				err = netlink.QdiscReplace(&tbfInfo)
 				if err != nil {
