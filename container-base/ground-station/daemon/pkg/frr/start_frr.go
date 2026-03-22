@@ -1,6 +1,7 @@
 package frr
 
 import (
+	"fmt"
 	"os/exec"
 
 	"github.com/sirupsen/logrus"
@@ -50,6 +51,19 @@ func StartOspfd() error {
 		return err
 	}
 	return err
+}
+
+func RemoveOspfNetwork(network string) error {
+    cmd := exec.Command("/usr/bin/vtysh",
+        "-c", "configure terminal",
+        "-c", "router ospf",
+        "-c", fmt.Sprintf("no network %s area 0.0.0.0", network),
+        "-c", "end")
+    err := cmd.Run()
+    if err != nil {
+        logrus.Warnf("Remove network %s error: %s", network, err.Error())
+    }
+    return err
 }
 
 func WriteOspfConfig(batchPath string) error {

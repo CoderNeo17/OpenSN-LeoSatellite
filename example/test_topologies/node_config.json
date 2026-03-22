@@ -16,7 +16,7 @@
         }
     },
     "GroundTerminal": {
-        "image": "docker.io/realssd/ground-station",
+        "image": "docker.io/coderneo17/user-terminal",
         "container_envs": {},
         "resource_limit": {
             "nano_cpu": "50M",

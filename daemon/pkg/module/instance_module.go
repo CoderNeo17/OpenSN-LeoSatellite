@@ -34,9 +34,14 @@ func CreateContainer(instance *model.Instance) error {
 			StopTimeout: &StopTimeoutSecond,
 		}
 
+		networkMode := container.NetworkMode("none")
+		if instance.Type == "GroundStation" {
+			networkMode = container.NetworkMode("bridge")
+		}
+
 		hostConfig := &container.HostConfig{
 			Privileged:  true,
-			NetworkMode: "none",
+			NetworkMode: networkMode,
 			Binds: []string{
 				fmt.Sprintf("%s:%s", dir.MountShareData, "/share"),
 			},
