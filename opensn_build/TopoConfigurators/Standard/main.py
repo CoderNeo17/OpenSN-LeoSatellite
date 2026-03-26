@@ -17,6 +17,7 @@ from time import sleep
 from address_allocator import alloc_ipv4,format_ipv4
 from loguru import logger
 import json, math
+from trace import IperfTrace
 step_second = 5
 
 polar_threshold = dec2ra(66.5)
@@ -130,6 +131,9 @@ if __name__ == "__main__":
     
     cli = EmulatorOperator(ADDR,PORT)
 
+    trace = IperfTrace("trace.csv")
+    trace.start()
+
     while True:
         node_list = cli.get_node_map()
         all_instance_map: dict[str,Instance] = {}
@@ -234,17 +238,20 @@ if __name__ == "__main__":
                 end0_type = link_info.end_infos[0].instance_type
                 end1_type = link_info.end_infos[1].instance_type
                 is_gsl = (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_STATION) or \
-                        (end0_type == TYPE_GROUND_STATION and end1_type == TYPE_SATELLITE)
+                        (end0_type == TYPE_GROUND_STATION and end1_type == TYPE_SATELLITE) or \
+                        (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_TERMINAL) or \
+                        (end0_type == TYPE_GROUND_TERMINAL and end1_type == TYPE_SATELLITE)
 
                 if is_gsl:
                     # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)
                     # End 0 is always satellite in your link model, so:
-                    link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = 5_000_000   # 5 Mbps
-                    link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = 20_000_000  # 20 Mbps
-                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 0
+                    downlink_bps, uplink_bps = trace.get_bandwidth(time_now)
+                    link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
+                    link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
+                    logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
                 else:
                     # ISL: keep symmetric
-                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1_000_000
+                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1_000_000_000
                 link_info.parameter[PARAMETER_KEY_LOSS] = 150
                 cli.put_link_parameter(link_info.node_index,link_info.link_id,link_info.parameter)
 
