@@ -1,0 +1,77 @@
+{
+    "instance_id": "386fb9c2",
+    "type": "Satellite",
+    "link_infos": {
+        "47ebd675": {
+            "IPV4": "10.0.0.173/30",
+            "delay_ms": 0.0
+        },
+        "62475985": {
+            "IPV4": "10.0.0.225/30",
+            "delay_ms": 0.0
+        },
+        "b07923bb": {
+            "IPV4": "10.0.1.86/30",
+            "delay_ms": 0.0
+        },
+        "f557189a": {
+            "IPV4": "10.0.1.218/30",
+            "delay_ms": 0.0
+        },
+        "d623d00c": {
+            "IPV4": "10.0.1.230/30",
+            "delay_ms": 0.0
+        },
+        "dd5429b3": {
+            "IPV4": "10.0.1.242/30",
+            "delay_ms": 0.0
+        },
+        "6bb0b2a7": {
+            "IPV4": "10.0.1.234/30",
+            "delay_ms": 0.0
+        },
+        "cd468ddb": {
+            "IPV4": "10.0.1.238/30",
+            "delay_ms": 0.0
+        }
+    },
+    "end_infos": {
+        "47ebd675": {
+            "instance_id": "3ceea323",
+            "type": "Satellite",
+            "area": "0.0.0.0"
+        },
+        "62475985": {
+            "instance_id": "3abeac84",
+            "type": "Satellite",
+            "area": "0.0.0.0"
+        },
+        "b07923bb": {
+            "instance_id": "4454904c",
+            "type": "Satellite",
+            "area": "0.0.0.0"
+        },
+        "f557189a": {
+            "instance_id": "2992959f",
+            "type": "Satellite",
+            "area": "0.0.0.0"
+        },
+        "d623d00c": {
+            "instance_id": "386fb9c2",
+            "type": "Satellite"
+        },
+        "dd5429b3": {
+            "instance_id": "386fb9c2",
+            "type": "Satellite"
+        },
+        "6bb0b2a7": {
+            "instance_id": "386fb9c2",
+            "type": "Satellite"
+        },
+        "cd468ddb": {
+            "instance_id": "386fb9c2",
+            "type": "Satellite"
+        }
+    },
+    "area": "0.0.0.0"
+}

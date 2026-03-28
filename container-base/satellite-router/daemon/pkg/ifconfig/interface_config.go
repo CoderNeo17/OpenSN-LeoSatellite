@@ -24,13 +24,33 @@ func ReplaceDefaultRoute(v4Addr string) error {
 	)
 }
 
+// func DelInterfaceIPs(ifName string) error {
+// 	link, err := netlink.LinkByName(ifName)
+// 	if err != nil {
+// 		logrus.Errorf("Find Link By Name %s Error: %s", ifName, err.Error())
+// 		return err
+// 	}
+// 	addrList, err := netlink.AddrList(link, netlink.FAMILY_V4)
+// 	if err != nil {
+// 		logrus.Errorf("Find Addr List By Link Name %s Error: %s", ifName, err.Error())
+// 		return err
+// 	}
+// 	for _, addr := range addrList {
+// 		netlink.AddrDel(link, &addr)
+// 	}
+// 	return nil
+// }
+
 func DelInterfaceIPs(ifName string) error {
-	link, err := netlink.LinkByName(ifName)
-	if err != nil {
-		logrus.Errorf("Find Link By Name %s Error: %s", ifName, err.Error())
-		return err
-	}
-	addrList, err := netlink.AddrList(link, netlink.FAMILY_V4)
+    link, err := netlink.LinkByName(ifName)
+    if err != nil {
+        if _, ok := err.(netlink.LinkNotFoundError); ok {
+            return nil
+        }
+        logrus.Errorf("Find Link By Name %s Error: %s", ifName, err.Error())
+        return err
+    }
+    addrList, err := netlink.AddrList(link, netlink.FAMILY_V4)
 	if err != nil {
 		logrus.Errorf("Find Addr List By Link Name %s Error: %s", ifName, err.Error())
 		return err
