@@ -36,7 +36,10 @@ def genenrate_config(cli:EmulatorOperator,node_index:int,instance_id:str):
         if instance_index < 0:
             return {}
         another_instance_info = cli.get_instance(link_info.end_infos[1-instance_index].end_node_index,link_info.end_infos[1-instance_index].instance_id)
-        config_map["link_infos"][k] = link_info.address_infos[instance_index]
+        config_map["link_infos"][k] = {
+            **link_info.address_infos[instance_index],
+            "delay_ms": link_info.parameter.get(PARAMETER_KEY_DELAY, 0) / 1000  # µs → ms
+        }
         config_map["end_infos"][k] = {
             "instance_id": v.instance_id,
             "type": v.instance_type,

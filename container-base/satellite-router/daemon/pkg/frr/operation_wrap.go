@@ -8,33 +8,40 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var CommandBatch = `
+var batchWithDefault = `
 router ospf
-    redistribute connected
-`
+  redistribute connected
+  default-information originate always
+%s`
+
+var batchWithoutDefault = `
+router ospf
+  redistribute connected
+  no default-information originate
+%s`
+
 var CommandBatchPath = "/etc/frr/batch.txt"
 
-func InitConfigBatch(links []*model.LinkInfo) error {
-	batch := CommandBatch
-	for _, v := range links {
-		batch += fmt.Sprintf("\tnetwork %s area 0.0.0.0\n", v.V4Addr)
-	}
-	confFile, err := os.Create(CommandBatchPath)
-	defer confFile.Close()
-	if err != nil {
-		logrus.Errorf("Create FRR Configuration Error: %s", err.Error())
-		return err
-	}
-	_, err = confFile.Write([]byte(batch))
-	if err != nil {
-		logrus.Errorf("Write FRR Configuration Error: %s", err.Error())
-		return err
-	}
-	err = WriteOspfConfig(CommandBatchPath)
+func InitConfigBatch(links []*model.LinkInfo, hasGSL bool) error {
+    template := batchWithoutDefault
+    if hasGSL {
+        template = batchWithDefault
+    }
+    var networks string
+    for _, v := range links {
+        networks += fmt.Sprintf("  network %s area 0.0.0.0\n", v.V4Addr)
+    }
+    batch := fmt.Sprintf(template, networks)
 
-	if err != nil {
-		logrus.Errorf("Write FRR Configuration to VTY Error: %s", err.Error())
-		return err
-	}
-	return nil
+    confFile, err := os.Create(CommandBatchPath)
+    if err != nil {
+        logrus.Errorf("Create FRR Configuration Error: %s", err.Error())
+        return err
+    }
+    defer confFile.Close()
+    if _, err = confFile.Write([]byte(batch)); err != nil {
+        logrus.Errorf("Write FRR Configuration Error: %s", err.Error())
+        return err
+    }
+    return WriteOspfConfig(CommandBatchPath)
 }

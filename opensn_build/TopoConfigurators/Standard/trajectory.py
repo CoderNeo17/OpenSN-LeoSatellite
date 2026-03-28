@@ -4,7 +4,7 @@ import ephem
 import datetime
 from opensn.const.const_var import R_EARTH,LIGHT_SPEED_M_S
 from opensn.model.position import Position
-from instance_types import TYPE_SATELLITE,TYPE_GROUND_STATION
+from instance_types import TYPE_SATELLITE,TYPE_GROUND_STATION, TYPE_GROUND_TERMINAL
 from instance_types import EX_TLE0_KEY,EX_TLE1_KEY,EX_TLE2_KEY,EX_LATITUDE_KEY,EX_LONGITUDE_KEY,EX_ALTITUDE_KEY
 from opensn.model.instance import Instance
 
@@ -24,7 +24,7 @@ def calculate_postion(instance: Instance,time:datetime.datetime) -> Position:
         ret.latitude = ephem_obj.sublat
         ret.longitude = ephem_obj.sublong
         ret.altitude = ephem_obj.elevation
-    elif instance.type == TYPE_GROUND_STATION:
+    elif instance.type == TYPE_GROUND_STATION or instance.type == TYPE_GROUND_TERMINAL:
         ret.latitude = deg2rad(float(instance.extra[EX_LATITUDE_KEY]))
         ret.longitude = deg2rad(float(instance.extra[EX_LONGITUDE_KEY]))
         ret.altitude = deg2rad(float(instance.extra[EX_ALTITUDE_KEY]))

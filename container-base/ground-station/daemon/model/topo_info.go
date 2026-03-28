@@ -1,7 +1,8 @@
 package model
 
 type LinkInfo struct {
-	V4Addr string `json:"IPV4"`
+    V4Addr  string  `json:"IPV4"`
+    DelayMs float64 `json:"delay_ms"`
 }
 
 type EndInfo struct {

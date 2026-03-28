@@ -10,41 +10,67 @@ import (
 
 const checkGap = 500 * time.Millisecond
 
-var linkReadymap = make(map[string]bool)
+var configuredLinks = make(map[string]string)
 
 func InitInterfaceWatcher() {
-	go InterfaceWatcher()
+    if err := EnableIPForwarding(); err != nil {
+        logrus.Errorf("Enable IP Forwarding Error: %s", err.Error())
+    }
+    go InterfaceWatcher()
 }
 
 func InterfaceWatcher() {
-	for {
-		links, err := netlink.LinkList()
-		if err != nil {
-			logrus.Errorf("Get Link List Error: %s", err.Error())
-			continue
-		}
-		for _, link := range links {
-			if linkReadymap[link.Attrs().Name] {
-				continue
-			} else if topoInfo, ok := data.TopoInfo.LinkInfos[link.Attrs().Name]; ok {
-				if topoInfo == nil {
-					continue
-				}
-				err = SetInterfaceIP(link.Attrs().Name, topoInfo.V4Addr)
-				if err != nil {
-					logrus.Errorf("Set Addr %s to %s Error: %s", topoInfo.V4Addr, link.Attrs().Name, err.Error())
-					continue
-				}
-				err = ReplaceDefaultRoute(link.Attrs().Index, topoInfo.V4Addr)
-				if err != nil {
-					logrus.Errorf("Set Default Gateway to %s Error: %s", topoInfo.V4Addr, err.Error())
-					continue
-				}
-				linkReadymap[link.Attrs().Name] = true
-			} else {
-				linkReadymap[link.Attrs().Name] = false
-			}
-		}
-		time.Sleep(checkGap)
-	}
+    for {
+        links, err := netlink.LinkList()
+        if err != nil {
+            logrus.Errorf("Get Link List Error: %s", err.Error())
+            time.Sleep(checkGap)
+            continue
+        }
+
+        topoLinks := data.TopoInfo.LinkInfos
+        topoEnds  := data.TopoInfo.EndInfos
+
+        kernelLinks := make(map[string]netlink.Link)
+        for _, l := range links {
+            kernelLinks[l.Attrs().Name] = l
+        }
+
+        // Tear down removed links
+        for name := range configuredLinks {
+            if _, inTopo := topoLinks[name]; !inTopo {
+                if err := DelInterfaceIPs(name); err != nil {
+                    logrus.Errorf("Del IPs on %s Error: %s", name, err.Error())
+                    continue
+                }
+                delete(configuredLinks, name)
+                logrus.Infof("Deconfigured interface %s", name)
+            }
+        }
+
+        // Configure present links
+        for name, topoInfo := range topoLinks {
+            if topoInfo == nil {
+                continue
+            }
+            if _, exists := kernelLinks[name]; !exists {
+                continue
+            }
+            if configuredLinks[name] == topoInfo.V4Addr {
+                continue
+            }
+            if configuredLinks[name] != "" {
+                DelInterfaceIPs(name)
+            }
+            if err := SetInterfaceIP(name, topoInfo.V4Addr); err != nil {
+                logrus.Errorf("Set IP on %s Error: %s", name, err.Error())
+                continue
+            }
+            configuredLinks[name] = topoInfo.V4Addr
+            logrus.Infof("Configured %s with %s", name, topoInfo.V4Addr)
+            _ = topoEnds[name]
+        }
+
+        time.Sleep(checkGap)
+    }
 }

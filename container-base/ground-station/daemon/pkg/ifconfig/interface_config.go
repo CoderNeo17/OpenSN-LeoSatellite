@@ -3,6 +3,7 @@ package ifconfig
 import (
 	"fmt"
 	"ground/utils"
+	"os"
 	"net"
 	"strconv"
 	"strings"
@@ -83,4 +84,8 @@ func SetInterfaceIP(ifName string, v4Addr string) error {
 		time.Sleep(time.Second)
 	}
 	return nil
+}
+
+func EnableIPForwarding() error {
+    return os.WriteFile("/proc/sys/net/ipv4/ip_forward", []byte("1"), 0644)
 }

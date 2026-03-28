@@ -16,8 +16,8 @@ func ReplaceDefaultRoute(v4Addr string) error {
 	return netlink.RouteReplace(
 		&netlink.Route{
 			Dst: &net.IPNet{
-				IP:[]byte{0,0,0,0},
-				Mask: []byte{0,0,0,0},
+				IP:   []byte{0, 0, 0, 0},
+				Mask: []byte{0, 0, 0, 0},
 			},
 			Gw: net.ParseIP(v4Addr),
 		},
@@ -76,4 +76,57 @@ func SetInterfaceIP(ifName string, v4Addr string) error {
 		time.Sleep(time.Second)
 	}
 	return nil
+}
+
+type GSLNexthop struct {
+	LinkIndex int
+	Gw        net.IP
+	Metric    int
+}
+
+func SyncDefaultRoutes(nexthops []GSLNexthop) error {
+	defaultDst := &net.IPNet{
+		IP:   net.IPv4(0, 0, 0, 0),
+		Mask: net.CIDRMask(0, 32),
+	}
+	for {
+		err := netlink.RouteDel(&netlink.Route{Dst: defaultDst})
+		if err != nil {
+			break
+		}
+	}
+	for _, nh := range nexthops {
+		err := netlink.RouteAdd(&netlink.Route{
+			Dst:       defaultDst,
+			Gw:        nh.Gw,
+			LinkIndex: nh.LinkIndex,
+			Priority:  nh.Metric,
+		})
+		if err != nil {
+			logrus.Errorf("Add default route via %s metric %d Error: %s", nh.Gw, nh.Metric, err.Error())
+		}
+	}
+	return nil
+}
+
+func PeerGatewayIP(v4Addr string) (net.IP, error) {
+	parts := strings.Split(v4Addr, "/")
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("invalid addr %s", v4Addr)
+	}
+	ip := net.ParseIP(parts[0]).To4()
+	if ip == nil {
+		return nil, fmt.Errorf("invalid IPv4 %s", parts[0])
+	}
+	peer := make(net.IP, 4)
+	copy(peer, ip)
+	switch ip[3] % 4 {
+	case 1:
+		peer[3]++
+	case 2:
+		peer[3]--
+	default:
+		return nil, fmt.Errorf("unexpected host bits in %s", v4Addr)
+	}
+	return peer, nil
 }
