@@ -9,10 +9,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// CommandBatch must start with "configure terminal" so vtysh enters config
-// mode before issuing OSPF sub-commands.
-var CommandBatch = `configure terminal
-router ospf
+// When using vtysh -f (batch file mode), vtysh automatically wraps the
+// file in a configure/end transaction. Do NOT include "configure terminal"
+// or "end" in the file — they are unknown commands in this context and
+// will cause vtysh to return exit status 2 and crash ospfd.
+var CommandBatch = `router ospf
  redistribute connected
 `
 var CommandBatchPath = "/etc/frr/batch.txt"
@@ -20,10 +21,6 @@ var CommandBatchPath = "/etc/frr/batch.txt"
 var mu sync.Mutex
 var currentNetwork string
 
-// InitConfigBatch writes a vtysh batch file that adds the supplied link
-// networks to OSPF area 0 and commits it.  It removes any previously
-// advertised network first so stale routes are not left in the RIB after
-// a satellite handover.
 func InitConfigBatch(links []*model.LinkInfo) error {
 	mu.Lock()
 	defer mu.Unlock()
@@ -42,7 +39,6 @@ func InitConfigBatch(links []*model.LinkInfo) error {
 		batch += fmt.Sprintf(" network %s area 0.0.0.0\n", v.V4Addr)
 		currentNetwork = v.V4Addr
 	}
-	batch += "end\n"
 
 	confFile, err := os.Create(CommandBatchPath)
 	if err != nil {
@@ -50,7 +46,7 @@ func InitConfigBatch(links []*model.LinkInfo) error {
 		return err
 	}
 	_, err = confFile.Write([]byte(batch))
-	confFile.Close() // close before exec so vtysh sees the full file
+	confFile.Close()
 	if err != nil {
 		logrus.Errorf("Write FRR Configuration Error: %s", err.Error())
 		return err
