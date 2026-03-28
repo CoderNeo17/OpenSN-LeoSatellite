@@ -105,8 +105,7 @@ func InterfaceWatcher() {
 			case "Satellite":
 				ospfLinks = append(ospfLinks, topoInfo)
 			case "GroundTerminal":
-				// IP is assigned, connected route redistributed via OSPF automatically
-				// Does not contribute to default route or hasGSL
+				ospfLinks = append(ospfLinks, topoInfo)
 			default:
 				logrus.Warnf("Unknown peer type %s on interface %s", endInfo.Type, name)
 			}
@@ -123,8 +122,8 @@ func InterfaceWatcher() {
 		}
 
 		var nexthops []GSLNexthop
-		for i, c := range candidates {
-			c.nh.Metric = (i + 1) * 100
+		for _, c := range candidates {
+			c.nh.Metric = 100
 			nexthops = append(nexthops, c.nh)
 		}
 
@@ -133,8 +132,8 @@ func InterfaceWatcher() {
 				logrus.Errorf("Sync default routes Error: %s", err.Error())
 			} else {
 				lastMetricOrder = newOrder
-				for i, c := range candidates {
-					logrus.Infof("GSL %s delay=%.2fms metric=%d", c.name, c.delay, (i+1)*100)
+				for _, c := range candidates {
+					logrus.Infof("GSL %s delay=%.2fms metric=%d", c.name, c.delay, c.nh.Metric)
 				}
 			}
 		}

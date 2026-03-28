@@ -32,6 +32,15 @@ func ReplaceDefaultRoute(linkIndex int, v4Addr string) error {
 	)
 }
 
+func DelDefaultRoute() {
+	_ = netlink.RouteDel(&netlink.Route{
+		Dst: &net.IPNet{
+			IP:   []byte{0, 0, 0, 0},
+			Mask: []byte{0, 0, 0, 0},
+		},
+	})
+}
+
 func DelInterfaceIPs(ifName string) error {
 	link, err := netlink.LinkByName(ifName)
 	if err != nil {
