@@ -13,10 +13,16 @@ const checkGap = 500 * time.Millisecond
 var configuredLinks = make(map[string]string)
 
 func InitInterfaceWatcher() {
-	if err := EnableIPForwarding(); err != nil {
-		logrus.Errorf("Enable IP Forwarding Error: %s", err.Error())
+    if err := EnableIPForwarding(); err != nil {
+        logrus.Errorf("Enable IP Forwarding Error: %s", err.Error())
+    }
+    if err := SetDefaultRouteViaEth0(); err != nil {
+        logrus.Errorf("Set Default Route via eth0 Error: %s", err.Error())
+    }
+	if err := EnableNAT(); err != nil {
+		logrus.Errorf("Enable NAT Error: %s", err.Error())
 	}
-	go InterfaceWatcher()
+    go InterfaceWatcher()
 }
 
 func InterfaceWatcher() {
@@ -67,8 +73,8 @@ func InterfaceWatcher() {
 				logrus.Errorf("Set IP on %s Error: %s", name, err.Error())
 				continue
 			}
-			if err := ReplaceDefaultRoute(link.Attrs().Index, topoInfo.V4Addr); err != nil {
-				logrus.Errorf("Set default route via %s Error: %s", name, err.Error())
+			if err := ReplaceStaticRoute(link.Attrs().Index, topoInfo.V4Addr); err != nil {
+				logrus.Errorf("Set static route via %s Error: %s", name, err.Error())
 				continue
 			}
 			configuredLinks[name] = topoInfo.V4Addr

@@ -3,8 +3,9 @@ package ifconfig
 import (
 	"fmt"
 	"ground/utils"
-	"os"
 	"net"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
-func ReplaceDefaultRoute(linkIndex int, v4Addr string) error {
+func ReplaceRoute(linkIndex int, v4Addr string) error {
 	gatewayIP := net.ParseIP(strings.Split(v4Addr, "/")[0])
 	if gatewayIP[15]%4 == 1 {
 		gatewayIP[15] += 1
@@ -32,6 +33,23 @@ func ReplaceDefaultRoute(linkIndex int, v4Addr string) error {
 	)
 }
 
+func ReplaceStaticRoute(linkIndex int, v4Addr string) error {
+	gatewayIP := net.ParseIP(strings.Split(v4Addr, "/")[0])
+    if gatewayIP[15]%4 == 1 {
+        gatewayIP[15] += 1
+    } else if gatewayIP[15]%4 == 2 {
+        gatewayIP[15] -= 1
+    }
+    _, dst, _ := net.ParseCIDR("10.0.0.0/16")
+    return netlink.RouteReplace(
+        &netlink.Route{
+            LinkIndex: linkIndex,
+            Dst:       dst,
+            Gw:        gatewayIP,
+        },
+    )
+}
+
 func DelDefaultRoute() {
 	_ = netlink.RouteDel(&netlink.Route{
 		Dst: &net.IPNet{
@@ -39,6 +57,30 @@ func DelDefaultRoute() {
 			Mask: []byte{0, 0, 0, 0},
 		},
 	})
+}
+
+func SetDefaultRouteViaEth0() error {
+    link, err := netlink.LinkByName("eth0")
+    if err != nil {
+        logrus.Errorf("Find eth0 Error: %s", err.Error())
+        return err
+    }
+    addrs, err := netlink.AddrList(link, netlink.FAMILY_V4)
+    if err != nil || len(addrs) == 0 {
+        logrus.Errorf("Get eth0 Addr Error: %s", err.Error())
+        return err
+    }
+    // derive gateway — docker bridge gateway is always x.x.x.1
+    gw := addrs[0].IP.Mask(addrs[0].Mask)
+    gw[3] = 1
+    return netlink.RouteReplace(&netlink.Route{
+        LinkIndex: link.Attrs().Index,
+        Dst: &net.IPNet{
+            IP:   []byte{0, 0, 0, 0},
+            Mask: []byte{0, 0, 0, 0},
+        },
+        Gw: gw,
+    })
 }
 
 func DelInterfaceIPs(ifName string) error {
@@ -97,4 +139,15 @@ func SetInterfaceIP(ifName string, v4Addr string) error {
 
 func EnableIPForwarding() error {
     return os.WriteFile("/proc/sys/net/ipv4/ip_forward", []byte("1"), 0644)
+}
+
+func EnableNAT() error {
+    cmd := exec.Command(
+        "iptables", "-t", "nat",
+        "-A", "POSTROUTING",
+        "-s", "10.0.0.0/16",
+        "!", "-o", "lo",
+        "-j", "MASQUERADE",
+    )
+    return cmd.Run()
 }

@@ -5,5 +5,7 @@ build:
 	sudo mv ground-station/ground-station-node.tar.gz ./
 	cd satellite-router && make build-file
 	sudo mv satellite-router/satellite-router-node.tar.gz ./
+	cd user-terminal && make build-file
+	sudo mv user-terminal/user-terminal-node.tar.gz ./
 clean:
 	sudo rm -rf *.tar.gz

@@ -34,9 +34,15 @@ func CreateContainer(instance *model.Instance) error {
 			StopTimeout: &StopTimeoutSecond,
 		}
 
+		var nMode = "none"
+		if instance.Type == "GroundStation" {
+			nMode = "bridge"
+		}
+
 		hostConfig := &container.HostConfig{
 			Privileged:  true,
-			NetworkMode: "none",
+			NetworkMode: container.NetworkMode(nMode),
+			DNS: []string{"8.8.8.8"},
 			Binds: []string{
 				fmt.Sprintf("%s:%s", dir.MountShareData, "/share"),
 			},
