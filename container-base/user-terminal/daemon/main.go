@@ -1,10 +1,10 @@
 package main
 
 import (
-	"ground/config"
-	"ground/data"
-	"ground/pkg/configure"
-	"ground/pkg/ifconfig"
+	"user/config"
+	"user/data"
+	"user/pkg/configure"
+	"user/pkg/ifconfig"
 	"os"
 	"os/signal"
 	"syscall"

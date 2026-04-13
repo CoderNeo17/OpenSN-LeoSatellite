@@ -3,8 +3,8 @@ package configure
 import (
 	"encoding/json"
 	"fmt"
-	"ground/data"
-	"ground/model"
+	"user/data"
+	"user/model"
 	"os"
 
 	"github.com/fsnotify/fsnotify"

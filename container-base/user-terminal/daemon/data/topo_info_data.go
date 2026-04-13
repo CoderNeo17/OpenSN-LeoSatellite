@@ -2,8 +2,8 @@ package data
 
 import (
 	"encoding/json"
-	"ground/config"
-	"ground/model"
+	"user/config"
+	"user/model"
 	"os"
 	"time"
 

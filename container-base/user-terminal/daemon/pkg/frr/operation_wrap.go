@@ -2,7 +2,7 @@ package frr
 
 import (
 	"fmt"
-	"ground/model"
+	"user/model"
 	"os"
 
 	"github.com/sirupsen/logrus"

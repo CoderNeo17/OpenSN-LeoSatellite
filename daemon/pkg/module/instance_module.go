@@ -39,17 +39,36 @@ func CreateContainer(instance *model.Instance) error {
 			nMode = "bridge"
 		}
 
-		hostConfig := &container.HostConfig{
-			Privileged:  true,
-			NetworkMode: container.NetworkMode(nMode),
-			DNS: []string{"8.8.8.8"},
-			Binds: []string{
-				fmt.Sprintf("%s:%s", dir.MountShareData, "/share"),
-			},
-			Resources: container.Resources{
+		binds := []string{
+			fmt.Sprintf("%s:%s", dir.MountShareData, "/share"),
+		}
+
+		if instance.Type == "GroundTerminal" {
+			bind := fmt.Sprintf("%s:%s", "/tmp/.X11-unix", "/tmp/.X11-unix")
+			binds = append(binds, bind)
+		}
+
+		resource := container.Resources{
 				NanoCPUs: instance.Resource.NanoCPU,
 				Memory:   instance.Resource.MemoryByte,
-			},
+			}
+		
+		var hostConfig *container.HostConfig
+		if instance.Type == "GroundTerminal" {
+			hostConfig = &container.HostConfig{
+				Privileged:  true,
+				NetworkMode: container.NetworkMode(nMode),
+				DNS:         []string{"8.8.8.8"},
+				Binds: binds,
+			}
+		} else {
+			hostConfig = &container.HostConfig{
+				Privileged:  true,
+				NetworkMode: container.NetworkMode(nMode),
+				DNS:         []string{"8.8.8.8"},
+				Binds: binds,
+				Resources: resource,
+			}
 		}
 
 		_, err := utils.DockerClient.ContainerCreate(

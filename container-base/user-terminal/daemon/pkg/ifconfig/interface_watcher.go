@@ -1,7 +1,7 @@
 package ifconfig
 
 import (
-	"ground/data"
+	"user/data"
 	"time"
 
 	"github.com/sirupsen/logrus"

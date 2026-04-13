@@ -19,7 +19,7 @@
         "image": "docker.io/coderneo17/user-terminal",
         "container_envs": {},
         "resource_limit": {
-            "nano_cpu": "50M",
+            "nano_cpu": "500M",
             "memory_byte": "128M"
         }
     }
