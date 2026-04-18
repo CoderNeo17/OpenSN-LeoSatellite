@@ -8,13 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var batchWithDefault = `
-router ospf
-  redistribute connected
-  default-information originate always
-%s`
-
-var batchWithoutDefault = `
+var batchDefault = `
 router ospf
   redistribute connected
   no default-information originate
@@ -22,16 +16,12 @@ router ospf
 
 var CommandBatchPath = "/etc/frr/batch.txt"
 
-func InitConfigBatch(links []*model.LinkInfo, hasGSL bool) error {
-    template := batchWithoutDefault
-    if hasGSL {
-        template = batchWithDefault
-    }
+func InitConfigBatch(links []*model.LinkInfo) error {
     var networks string
     for _, v := range links {
         networks += fmt.Sprintf("  network %s area 0.0.0.0\n", v.V4Addr)
     }
-    batch := fmt.Sprintf(template, networks)
+    batch := fmt.Sprintf(batchDefault, networks)
 
     confFile, err := os.Create(CommandBatchPath)
     if err != nil {

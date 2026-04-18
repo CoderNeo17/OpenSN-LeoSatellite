@@ -146,7 +146,7 @@ func InterfaceWatcher() {
 		if gslChanged || ospfChanged {
 			hasGSL = nowHasGSL
 			lastOspfLinks = ospfLinks
-			if err := frr.InitConfigBatch(ospfLinks, hasGSL); err != nil {
+			if err := frr.InitConfigBatch(ospfLinks); err != nil {
 				logrus.Errorf("FRR InitConfigBatch Error: %s", err.Error())
 			}
 			if gslChanged {

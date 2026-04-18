@@ -16,9 +16,6 @@ func InitInterfaceWatcher() {
     if err := EnableIPForwarding(); err != nil {
         logrus.Errorf("Enable IP Forwarding Error: %s", err.Error())
     }
-    if err := SetDefaultRouteViaEth0(); err != nil {
-        logrus.Errorf("Set Default Route via eth0 Error: %s", err.Error())
-    }
 	if err := EnableNAT(); err != nil {
 		logrus.Errorf("Enable NAT Error: %s", err.Error())
 	}
@@ -59,7 +56,7 @@ func InterfaceWatcher() {
 			if topoInfo == nil {
 				continue
 			}
-			link, exists := kernelLinks[name]
+			_, exists := kernelLinks[name]
 			if !exists {
 				continue
 			}
@@ -73,10 +70,10 @@ func InterfaceWatcher() {
 				logrus.Errorf("Set IP on %s Error: %s", name, err.Error())
 				continue
 			}
-			if err := ReplaceStaticRoute(link.Attrs().Index, topoInfo.V4Addr); err != nil {
-				logrus.Errorf("Set static route via %s Error: %s", name, err.Error())
-				continue
-			}
+			// if err := ReplaceStaticRoute(link.Attrs().Index, topoInfo.V4Addr); err != nil {
+			// 	logrus.Errorf("Set static route via %s Error: %s", name, err.Error())
+			// 	continue
+			// }
 			configuredLinks[name] = topoInfo.V4Addr
 			logrus.Infof("Configured %s with %s", name, topoInfo.V4Addr)
 			_ = topoEnds[name]
