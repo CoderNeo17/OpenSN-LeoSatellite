@@ -5,15 +5,16 @@ from opensn.const.dict_fields import PARAMETER_KEY_CONNECT,PARAMETER_KEY_DELAY,P
 from opensn.model.link import LinkBase
 from opensn.utils.tools import dec2ra
 from config import ADDR,PORT
-from datetime import datetime
+from datetime import datetime, timedelta
 from trajectory import calculate_postion,distance_meter,select_closest_satellite,get_propagation_delay_s
 from instance_types import TYPE_GROUND_STATION, TYPE_SATELLITE, TYPE_GROUND_TERMINAL, EX_ORBIT_INDEX,EX_ALTITUDE_KEY,EX_LATITUDE_KEY,EX_LONGITUDE_KEY, EX_AREA_KEY
 from address_type import LINK_V4_ADDR_KEY
 from time import sleep
 from address_allocator import alloc_ipv4,format_ipv4
+from link_model import *
 from loguru import logger
 import json, math
-step_second = 5
+step_second = 1
 
 polar_threshold = dec2ra(66.5)
 
@@ -129,6 +130,9 @@ if __name__ == "__main__":
     
     cli = EmulatorOperator(ADDR,PORT)
 
+    SIM_START = datetime(2026, 3, 1, 10, 58, 28)
+    sim_elapsed = 0
+
     while True:
         node_list = cli.get_node_map()
         all_instance_map: dict[str,Instance] = {}
@@ -178,7 +182,8 @@ if __name__ == "__main__":
                 node_link_map[node_index][link_id] = link_info
 
         position_map: dict[str,Position] = {"":Position()}
-        time_now = datetime.now()
+        time_now = SIM_START + timedelta(seconds=sim_elapsed)
+        sim_elapsed += step_second
         for instance_id,instance_info in all_instance_map.items():
             if instance_info.type in [TYPE_GROUND_STATION, TYPE_GROUND_TERMINAL]:   # NEW
                 new_postion = Position()
@@ -230,7 +235,29 @@ if __name__ == "__main__":
                 )
                 delay = int(get_propagation_delay_s(distance)*1000000)
                 link_info.parameter[PARAMETER_KEY_DELAY] = delay
-                link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1000000
+                pos1 = position_map[link_info.end_infos[0].instance_id]
+                pos2 = position_map[link_info.end_infos[1].instance_id]
+
+                # detect GSL
+                if (
+                    link_info.end_infos[0].instance_type != TYPE_SATELLITE or
+                    link_info.end_infos[1].instance_type != TYPE_SATELLITE
+                ):
+                    # identify sat vs ground
+                    if link_info.end_infos[0].instance_type == TYPE_SATELLITE:
+                        sat_pos, gs_pos = pos1, pos2
+                    else:
+                        sat_pos, gs_pos = pos2, pos1
+
+                    elev = elevation_angle(gs_pos, sat_pos)
+                    dist = distance_meter(gs_pos, sat_pos)
+
+                    bw = gsl_bandwidth(elev, dist)
+                    loss = gsl_loss(elev, dist)
+
+                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = bw
+                else:
+                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1000000
                 link_info.parameter[PARAMETER_KEY_LOSS] = 150
                 cli.put_link_parameter(link_info.node_index,link_info.link_id,link_info.parameter)
 

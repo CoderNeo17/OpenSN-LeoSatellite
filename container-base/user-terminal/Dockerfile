@@ -36,7 +36,11 @@ RUN apt-get update && apt-get install -y \
     libatk-bridge2.0-0 \
     libgbm1 \
     ca-certificates \
+    python3 \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip install psutil 
 
 ENV DISPLAY=:0
 
@@ -49,5 +53,6 @@ RUN tar -xJf /tmp/firefox.tar.xz -C /opt && \
 # CMD [ "/Workspace/entrypoint"]
 
 COPY scripts/entrypoint /Workspace/entrypoint
+COPY home /home
 RUN chmod +x /Workspace/entrypoint
 CMD [ "/Workspace/entrypoint"]
