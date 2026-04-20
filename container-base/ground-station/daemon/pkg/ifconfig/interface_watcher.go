@@ -19,9 +19,9 @@ func InitInterfaceWatcher() {
     if err := SetDefaultRouteViaEth0(); err != nil {
         logrus.Errorf("Set Default Route via eth0 Error: %s", err.Error())
     }
-	// if err := EnableNAT(); err != nil {
-	// 	logrus.Errorf("Enable NAT Error: %s", err.Error())
-	// }
+	if err := EnableNAT(); err != nil {
+		logrus.Errorf("Enable NAT Error: %s", err.Error())
+	}
     go InterfaceWatcher()
 }
 
