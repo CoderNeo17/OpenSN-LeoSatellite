@@ -2,10 +2,10 @@ package ifconfig
 
 import (
 	"fmt"
-	"anchor/utils"
 	"net"
 	"os"
 	"os/exec"
+	"satellite/utils"
 	"strconv"
 	"strings"
 	"time"
@@ -14,82 +14,45 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
-func ReplaceRoute(linkIndex int, v4Addr string) error {
-	gatewayIP := net.ParseIP(strings.Split(v4Addr, "/")[0])
-	if gatewayIP[15]%4 == 1 {
-		gatewayIP[15] += 1
-	} else if gatewayIP[15]%4 == 2 {
-		gatewayIP[15] -= 1
-	}
+func ReplaceDefaultRoute(v4Addr string) error {
 	return netlink.RouteReplace(
 		&netlink.Route{
-			LinkIndex: linkIndex,
 			Dst: &net.IPNet{
 				IP:   []byte{0, 0, 0, 0},
 				Mask: []byte{0, 0, 0, 0},
 			},
-			Gw: gatewayIP,
+			Gw: net.ParseIP(v4Addr),
 		},
 	)
 }
 
-func ReplaceStaticRoute(linkIndex int, v4Addr string) error {
-	gatewayIP := net.ParseIP(strings.Split(v4Addr, "/")[0])
-    if gatewayIP[15]%4 == 1 {
-        gatewayIP[15] += 1
-    } else if gatewayIP[15]%4 == 2 {
-        gatewayIP[15] -= 1
-    }
-    _, dst, _ := net.ParseCIDR("10.0.0.0/16")
-    return netlink.RouteReplace(
-        &netlink.Route{
-            LinkIndex: linkIndex,
-            Dst:       dst,
-            Gw:        gatewayIP,
-        },
-    )
-}
-
-func DelDefaultRoute() {
-	_ = netlink.RouteDel(&netlink.Route{
-		Dst: &net.IPNet{
-			IP:   []byte{0, 0, 0, 0},
-			Mask: []byte{0, 0, 0, 0},
-		},
-	})
-}
-
-func SetDefaultRouteViaEth0() error {
-    link, err := netlink.LinkByName("eth0")
-    if err != nil {
-        logrus.Errorf("Find eth0 Error: %s", err.Error())
-        return err
-    }
-    addrs, err := netlink.AddrList(link, netlink.FAMILY_V4)
-    if err != nil || len(addrs) == 0 {
-        logrus.Errorf("Get eth0 Addr Error: %s", err.Error())
-        return err
-    }
-    // derive gateway — docker bridge gateway is always x.x.x.1
-    gw := addrs[0].IP.Mask(addrs[0].Mask)
-    gw[3] = 1
-    return netlink.RouteReplace(&netlink.Route{
-        LinkIndex: link.Attrs().Index,
-        Dst: &net.IPNet{
-            IP:   []byte{0, 0, 0, 0},
-            Mask: []byte{0, 0, 0, 0},
-        },
-        Gw: gw,
-    })
-}
+// func DelInterfaceIPs(ifName string) error {
+// 	link, err := netlink.LinkByName(ifName)
+// 	if err != nil {
+// 		logrus.Errorf("Find Link By Name %s Error: %s", ifName, err.Error())
+// 		return err
+// 	}
+// 	addrList, err := netlink.AddrList(link, netlink.FAMILY_V4)
+// 	if err != nil {
+// 		logrus.Errorf("Find Addr List By Link Name %s Error: %s", ifName, err.Error())
+// 		return err
+// 	}
+// 	for _, addr := range addrList {
+// 		netlink.AddrDel(link, &addr)
+// 	}
+// 	return nil
+// }
 
 func DelInterfaceIPs(ifName string) error {
-	link, err := netlink.LinkByName(ifName)
-	if err != nil {
-		logrus.Errorf("Find Link By Name %s Error: %s", ifName, err.Error())
-		return err
-	}
-	addrList, err := netlink.AddrList(link, netlink.FAMILY_V4)
+    link, err := netlink.LinkByName(ifName)
+    if err != nil {
+        if _, ok := err.(netlink.LinkNotFoundError); ok {
+            return nil
+        }
+        logrus.Errorf("Find Link By Name %s Error: %s", ifName, err.Error())
+        return err
+    }
+    addrList, err := netlink.AddrList(link, netlink.FAMILY_V4)
 	if err != nil {
 		logrus.Errorf("Find Addr List By Link Name %s Error: %s", ifName, err.Error())
 		return err
@@ -137,6 +100,59 @@ func SetInterfaceIP(ifName string, v4Addr string) error {
 	return nil
 }
 
+type GSLNexthop struct {
+	LinkIndex int
+	Gw        net.IP
+	Metric    int
+}
+
+func SyncDefaultRoutes(nexthops []GSLNexthop) error {
+	defaultDst := &net.IPNet{
+		IP:   net.IPv4(0, 0, 0, 0),
+		Mask: net.CIDRMask(0, 32),
+	}
+	for {
+		err := netlink.RouteDel(&netlink.Route{Dst: defaultDst})
+		if err != nil {
+			break
+		}
+	}
+	for _, nh := range nexthops {
+		err := netlink.RouteAdd(&netlink.Route{
+			Dst:       defaultDst,
+			Gw:        nh.Gw,
+			LinkIndex: nh.LinkIndex,
+			Priority:  nh.Metric,
+		})
+		if err != nil {
+			logrus.Errorf("Add default route via %s metric %d Error: %s", nh.Gw, nh.Metric, err.Error())
+		}
+	}
+	return nil
+}
+
+func PeerGatewayIP(v4Addr string) (net.IP, error) {
+	parts := strings.Split(v4Addr, "/")
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("invalid addr %s", v4Addr)
+	}
+	ip := net.ParseIP(parts[0]).To4()
+	if ip == nil {
+		return nil, fmt.Errorf("invalid IPv4 %s", parts[0])
+	}
+	peer := make(net.IP, 4)
+	copy(peer, ip)
+	switch ip[3] % 4 {
+	case 1:
+		peer[3]++
+	case 2:
+		peer[3]--
+	default:
+		return nil, fmt.Errorf("unexpected host bits in %s", v4Addr)
+	}
+	return peer, nil
+}
+
 func EnableIPForwarding() error {
     return os.WriteFile("/proc/sys/net/ipv4/ip_forward", []byte("1"), 0644)
 }
@@ -150,4 +166,37 @@ func EnableNAT() error {
         "-j", "MASQUERADE",
     )
     return cmd.Run()
+}
+
+func DelDefaultRoute() {
+	_ = netlink.RouteDel(&netlink.Route{
+		Dst: &net.IPNet{
+			IP:   []byte{0, 0, 0, 0},
+			Mask: []byte{0, 0, 0, 0},
+		},
+	})
+}
+
+func SetDefaultRouteViaEth0() error {
+    link, err := netlink.LinkByName("eth0")
+    if err != nil {
+        logrus.Errorf("Find eth0 Error: %s", err.Error())
+        return err
+    }
+    addrs, err := netlink.AddrList(link, netlink.FAMILY_V4)
+    if err != nil || len(addrs) == 0 {
+        logrus.Errorf("Get eth0 Addr Error: %s", err.Error())
+        return err
+    }
+    // derive gateway — docker bridge gateway is always x.x.x.1
+    gw := addrs[0].IP.Mask(addrs[0].Mask)
+    gw[3] = 1
+    return netlink.RouteReplace(&netlink.Route{
+        LinkIndex: link.Attrs().Index,
+        Dst: &net.IPNet{
+            IP:   []byte{0, 0, 0, 0},
+            Mask: []byte{0, 0, 0, 0},
+        },
+        Gw: gw,
+    })
 }

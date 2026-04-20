@@ -11,7 +11,7 @@ EX_AREA_KEY = "Area"
 
 TYPE_GROUND_STATION = "GroundStation"
 TYPE_GROUND_TERMINAL = "GroundTerminal"
-
+TYPE_ANCHOR_NODE = "Anchor"
 # Type GroundStation Extra Fields
 EX_LATITUDE_KEY = "latitude"
 EX_LONGITUDE_KEY = "longitude"

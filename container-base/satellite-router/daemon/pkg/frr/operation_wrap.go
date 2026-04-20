@@ -11,7 +11,6 @@ import (
 var batchDefault = `
 router ospf
   redistribute connected
-  no default-information originate
 %s`
 
 var CommandBatchPath = "/etc/frr/batch.txt"

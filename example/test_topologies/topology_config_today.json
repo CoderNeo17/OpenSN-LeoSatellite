@@ -831,6 +831,16 @@
         "altitude": "12.0"
       },
       "device_info": {}
+    },
+    {
+      "type": "Anchor",
+      "extra": {
+        "AnchorIndex": "0",
+        "latitude": "13.0827",
+        "longitude": "80.2707",
+        "altitude": "0.5"
+      },
+      "device_info": {}
     }
   ],
   "links": [

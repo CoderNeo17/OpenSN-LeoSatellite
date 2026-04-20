@@ -3,9 +3,9 @@ package configure
 import (
 	"encoding/json"
 	"fmt"
-	"anchor/data"
-	"anchor/model"
 	"os"
+	"satellite/data"
+	"satellite/model"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/sirupsen/logrus"

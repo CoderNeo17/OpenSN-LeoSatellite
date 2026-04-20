@@ -1,4 +1,4 @@
-module anchor
+module satellite
 
 go 1.20
 

@@ -11,7 +11,7 @@ type EndInfo struct {
 }
 
 type TopoInfo struct {
-	InstanceID string              `json:"instance_id"`
+	InstanceID string               `json:"instance_id"`
 	LinkInfos  map[string]*LinkInfo `json:"link_infos"`
 	EndInfos   map[string]*EndInfo  `json:"end_infos"`
 }
