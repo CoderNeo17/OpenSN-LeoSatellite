@@ -1,8 +1,10 @@
 FROM build-base
 
 RUN apt update && apt install -y \
-    iptables
+    iptables \
+    conntrack \
+    conntrackd 
 
-COPY scripts/entrypoint /Workspace/entrypoint
+COPY scripts /Workspace/
 RUN chmod +x /Workspace/entrypoint
 CMD [ "/Workspace/entrypoint"]

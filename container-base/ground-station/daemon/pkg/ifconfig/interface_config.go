@@ -146,7 +146,7 @@ func EnableNAT() error {
         "iptables", "-t", "nat",
         "-A", "POSTROUTING",
         "-s", "10.0.0.0/16",
-        "!", "-o", "lo",
+        "-o", "eth0",
         "-j", "MASQUERADE",
     )
     return cmd.Run()
