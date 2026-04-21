@@ -2,7 +2,6 @@ package ifconfig
 
 import (
 	"satellite/data"
-	"satellite/model"
 	"satellite/pkg/frr"
 	"time"
 
@@ -19,6 +18,10 @@ func InitInterfaceWatcher() {
 }
 
 func InterfaceWatcher() {
+	if err := frr.InitOspf() ; err != nil {
+		logrus.Errorf("Ospf Init Error: %s", err.Error())
+		return
+	}
 	for {
 		links, err := netlink.LinkList()
 		if err != nil {
@@ -39,7 +42,9 @@ func InterfaceWatcher() {
 				}
 				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Satellite" ||
 					data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" {
-					frr.InitConfigBatch([]*model.LinkInfo{topoInfo})
+					frr.EnableOspfOnInterface(link.Attrs().Name,false)
+				}else if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundTerminal" {
+					frr.EnableOspfOnInterface(link.Attrs().Name,true)
 				}
 				logrus.Infof("Init Interface %s Success.", link.Attrs().Name)
 				linkReadymap[link.Attrs().Name] = true
