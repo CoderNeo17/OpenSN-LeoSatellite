@@ -7,7 +7,7 @@ from opensn.utils.tools import dec2ra
 from config import ADDR,PORT
 from datetime import datetime, timedelta
 from trajectory import calculate_postion,distance_meter,select_closest_satellite,get_propagation_delay_s
-from instance_types import TYPE_GROUND_STATION, TYPE_SATELLITE, TYPE_GROUND_TERMINAL, EX_ORBIT_INDEX,EX_ALTITUDE_KEY,EX_LATITUDE_KEY,EX_LONGITUDE_KEY, EX_AREA_KEY
+from instance_types import *
 from address_type import LINK_V4_ADDR_KEY
 from time import sleep
 from address_allocator import alloc_ipv4,format_ipv4
@@ -71,8 +71,10 @@ def handle_gsl_handover(cli, node, node_type_label, position_map, all_instance_m
 
     old_link_id = ""
     for key in node.connections.keys():
-        old_link_id = key
-        break
+        other_node_type = node.connections[key].instance_type
+        if other_node_type == TYPE_SATELLITE:
+            old_link_id = key
+            break
 
     if old_link_id != "":
         old_link = cli.disable_link_between(
@@ -124,6 +126,20 @@ def handle_gsl_handover(cli, node, node_type_label, position_map, all_instance_m
     cli.put_instance_config(all_instance_map[satellite_id].node_index, all_instance_map[satellite_id].instance_id, json.dumps(sat_config))
 
 
+def anchor(gs,anc):
+    subnet = alloc_ipv4(30)
+    cli.enable_link_between(
+        anc.node_index,
+        anc.instance_id,
+        gs.node_index,
+        gs.instance_id,
+        address_info1={LINK_V4_ADDR_KEY: format_ipv4(subnet[1], 30)},
+        address_info2={LINK_V4_ADDR_KEY: format_ipv4(subnet[2], 30)},
+    )
+    logger.info("Linked anchor %s <-> ground station %s" % (
+        anc.instance_id, gs.instance_id
+    ))
+
 if __name__ == "__main__":
 
     instance_config_updated:dict[str,str] = {}
@@ -132,6 +148,8 @@ if __name__ == "__main__":
 
     SIM_START = datetime(2026, 3, 1, 10, 58, 28)
     sim_elapsed = 0
+    started = False
+    anchored = False
 
     while True:
         node_list = cli.get_node_map()
@@ -139,6 +157,7 @@ if __name__ == "__main__":
         node_link_map: dict[int,dict[str,LinkBase]] = {}
         ground_station_list: list[Instance] = []
         user_terminal_list: list[Instance] = []          # NEW
+        anchor_node : Instance = None
 
         for node_index,node in node_list.items():
             instance_map = cli.get_instance_map(node_index)
@@ -160,26 +179,14 @@ if __name__ == "__main__":
                     ut_position.longitude = float(instance.extra[EX_LONGITUDE_KEY]) / 180 * math.pi
                     ut_position.altitude = float(instance.extra[EX_ALTITUDE_KEY])
                     cli.put_position(instance_id, ut_position)
-
-        address_map = {}
-        for node_index,node in node_list.items():
-            node_link_map[node_index] = {}
-            link_map = cli.get_link_map(node_index)
-            for link_id,link_info in link_map.items():
-                if LINK_V4_ADDR_KEY not in link_info.address_infos[0] or \
-                    LINK_V4_ADDR_KEY not in link_info.address_infos[1] is None:
-                    if link_id not in address_map.keys():
-                        address_map[link_id] = alloc_ipv4(30)
-                    
-                    subnet = address_map[link_id]
-                    link_info.address_infos = [{
-                        LINK_V4_ADDR_KEY: format_ipv4(subnet[1],30)
-                    },
-                    {
-                        LINK_V4_ADDR_KEY: format_ipv4(subnet[2],30)
-                    }]
-                    cli.put_link(link_info)
-                node_link_map[node_index][link_id] = link_info
+                
+                elif instance.type == TYPE_ANCHOR_NODE:   # NEW
+                    anchor_node = instance
+                    an_position = Position()
+                    an_position.latitude = float(instance.extra[EX_LATITUDE_KEY]) / 180 * math.pi
+                    an_position.longitude = float(instance.extra[EX_LONGITUDE_KEY]) / 180 * math.pi
+                    an_position.altitude = float(instance.extra[EX_ALTITUDE_KEY])
+                    cli.put_position(instance_id, an_position)
 
         position_map: dict[str,Position] = {"":Position()}
         time_now = SIM_START + timedelta(seconds=sim_elapsed)
@@ -194,10 +201,38 @@ if __name__ == "__main__":
             elif instance_info.start:
                 new_postion = calculate_postion(instance_info,time_now)
                 cli.put_position(instance_id,new_postion)
+                started = True
             else:
                 new_postion = Position()
                 cli.put_position(instance_id,new_postion)
             position_map[instance_id] = new_postion
+
+        if started and (not anchored) and (anchor_node is not None) :
+            for gs in ground_station_list:
+                anchor(gs,anchor_node)
+            anchored = True
+
+        address_map = {}
+        for node_index,node in node_list.items():
+            node_link_map[node_index] = {}
+            link_map = cli.get_link_map(node_index)
+            for link_id,link_info in link_map.items():
+                if link_info.address_infos[0] is None:
+                    continue
+                if LINK_V4_ADDR_KEY not in link_info.address_infos[0] or \
+                    LINK_V4_ADDR_KEY not in link_info.address_infos[1] is None:
+                    if link_id not in address_map.keys():
+                        address_map[link_id] = alloc_ipv4(30)
+                    
+                    subnet = address_map[link_id]
+                    link_info.address_infos = [{
+                        LINK_V4_ADDR_KEY: format_ipv4(subnet[1],30)
+                    },
+                    {
+                        LINK_V4_ADDR_KEY: format_ipv4(subnet[2],30)
+                    }]
+                    cli.put_link(link_info)
+                node_link_map[node_index][link_id] = link_info
 
         # Ground Station GSL handover
         for ground_station in ground_station_list:

@@ -1,4 +1,4 @@
-module ground
+module ground-station
 
 go 1.20
 

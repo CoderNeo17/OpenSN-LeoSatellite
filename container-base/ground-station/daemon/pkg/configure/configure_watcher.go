@@ -3,9 +3,9 @@ package configure
 import (
 	"encoding/json"
 	"fmt"
-	"ground/data"
-	"ground/model"
 	"os"
+	"ground-station/data"
+	"ground-station/model"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/sirupsen/logrus"

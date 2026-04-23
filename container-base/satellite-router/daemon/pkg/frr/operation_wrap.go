@@ -3,45 +3,74 @@ package frr
 import (
 	"fmt"
 	"os"
-	"satellite/model"
 
 	"github.com/sirupsen/logrus"
 )
 
-var batchWithDefault = `
-router ospf
-  redistribute connected
-  default-information originate always
-%s`
-
-var batchWithoutDefault = `
-router ospf
-  redistribute connected
-  no default-information originate
-%s`
-
 var CommandBatchPath = "/etc/frr/batch.txt"
 
-func InitConfigBatch(links []*model.LinkInfo, hasGSL bool) error {
-    template := batchWithoutDefault
-    if hasGSL {
-        template = batchWithDefault
-    }
-    var networks string
-    for _, v := range links {
-        networks += fmt.Sprintf("  network %s area 0.0.0.0\n", v.V4Addr)
-    }
-    batch := fmt.Sprintf(template, networks)
+func InitOspf() error {
+    logrus.Info("Initializing OSPF base configuration")
+
+    batch := `
+router ospf
+`
 
     confFile, err := os.Create(CommandBatchPath)
     if err != nil {
-        logrus.Errorf("Create FRR Configuration Error: %s", err.Error())
+        logrus.Errorf("Failed to create batch file: %v", err)
         return err
     }
     defer confFile.Close()
+
     if _, err = confFile.Write([]byte(batch)); err != nil {
-        logrus.Errorf("Write FRR Configuration Error: %s", err.Error())
+        logrus.Errorf("Failed to write batch config: %v", err)
         return err
     }
-    return WriteOspfConfig(CommandBatchPath)
+
+    if err := WriteOspfConfig(CommandBatchPath); err != nil {
+        logrus.Errorf("Failed to apply OSPF config: %v", err)
+        return err
+    }
+
+    logrus.Info("OSPF base configuration applied successfully")
+    return nil
+}
+
+func EnableOspfOnInterface(ifName string, passive bool) error {
+    logrus.Infof("Configuring OSPF on interface %s (passive=%v)", ifName, passive)
+
+    var cmd string
+    if passive {
+        cmd = fmt.Sprintf(`
+interface %s
+ ip ospf area 0
+ ip ospf passive
+`, ifName)
+    } else {
+        cmd = fmt.Sprintf(`
+interface %s
+ ip ospf area 0
+`, ifName)
+    }
+
+    confFile, err := os.Create(CommandBatchPath)
+    if err != nil {
+        logrus.Errorf("Failed to create batch file for %s: %v", ifName, err)
+        return err
+    }
+    defer confFile.Close()
+
+    if _, err = confFile.Write([]byte(cmd)); err != nil {
+        logrus.Errorf("Failed to write config for %s: %v", ifName, err)
+        return err
+    }
+
+    if err := WriteOspfConfig(CommandBatchPath); err != nil {
+        logrus.Errorf("Failed to apply OSPF config for %s: %v", ifName, err)
+        return err
+    }
+
+    logrus.Infof("OSPF enabled on interface %s", ifName)
+    return nil
 }

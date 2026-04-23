@@ -1,7 +1,8 @@
 package ifconfig
 
 import (
-	"ground/data"
+	"ground-station/data"
+	"ground-station/pkg/frr"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -10,78 +11,51 @@ import (
 
 const checkGap = 500 * time.Millisecond
 
-var configuredLinks = make(map[string]string)
+var linkReadymap = make(map[string]bool)
 
 func InitInterfaceWatcher() {
     if err := EnableIPForwarding(); err != nil {
         logrus.Errorf("Enable IP Forwarding Error: %s", err.Error())
     }
-    if err := SetDefaultRouteViaEth0(); err != nil {
-        logrus.Errorf("Set Default Route via eth0 Error: %s", err.Error())
-    }
-	if err := EnableNAT(); err != nil {
-		logrus.Errorf("Enable NAT Error: %s", err.Error())
-	}
+	// if err := EnableNAT(); err != nil {
+	// 	logrus.Errorf("Enable NAT Error: %s", err.Error())
+	// }
     go InterfaceWatcher()
 }
 
 func InterfaceWatcher() {
+	if err := frr.InitOspf() ; err != nil {
+		logrus.Errorf("Ospf Init Error: %s", err.Error())
+		return
+	}
 	for {
 		links, err := netlink.LinkList()
 		if err != nil {
 			logrus.Errorf("Get Link List Error: %s", err.Error())
-			time.Sleep(checkGap)
 			continue
 		}
-
-		topoLinks := data.TopoInfo.LinkInfos
-		topoEnds := data.TopoInfo.EndInfos
-
-		kernelLinks := make(map[string]netlink.Link)
-		for _, l := range links {
-			kernelLinks[l.Attrs().Name] = l
-		}
-
-		// Tear down removed links
-		for name := range configuredLinks {
-			if _, inTopo := topoLinks[name]; !inTopo {
-				if err := DelInterfaceIPs(name); err != nil {
-					logrus.Errorf("Del IPs on %s Error: %s", name, err.Error())
+		for _, link := range links {
+			if linkReadymap[link.Attrs().Name] {
+				continue
+			} else if topoInfo, ok := data.TopoInfo.LinkInfos[link.Attrs().Name]; ok {
+				if topoInfo == nil {
 					continue
 				}
-				delete(configuredLinks, name)
-				logrus.Infof("Deconfigured interface %s", name)
+				err = SetInterfaceIP(link.Attrs().Name, topoInfo.V4Addr)
+				if err != nil {
+					logrus.Errorf("Set Addr %s to %s Error: %s", topoInfo.V4Addr, link.Attrs().Name, err.Error())
+					continue
+				}
+				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" ||
+					data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Anchor" {
+					frr.EnableOspfOnInterface(link.Attrs().Name,false)
+				}
+				logrus.Infof("Init Interface %s Success.", link.Attrs().Name)
+				linkReadymap[link.Attrs().Name] = true
+			} else {
+				linkReadymap[link.Attrs().Name] = false
 			}
 		}
-
-		// Configure present links
-		for name, topoInfo := range topoLinks {
-			if topoInfo == nil {
-				continue
-			}
-			link, exists := kernelLinks[name]
-			if !exists {
-				continue
-			}
-			if configuredLinks[name] == topoInfo.V4Addr {
-				continue
-			}
-			if configuredLinks[name] != "" {
-				DelInterfaceIPs(name)
-			}
-			if err := SetInterfaceIP(name, topoInfo.V4Addr); err != nil {
-				logrus.Errorf("Set IP on %s Error: %s", name, err.Error())
-				continue
-			}
-			if err := ReplaceStaticRoute(link.Attrs().Index, topoInfo.V4Addr); err != nil {
-				logrus.Errorf("Set static route via %s Error: %s", name, err.Error())
-				continue
-			}
-			configuredLinks[name] = topoInfo.V4Addr
-			logrus.Infof("Configured %s with %s", name, topoInfo.V4Addr)
-			_ = topoEnds[name]
-		}
-
 		time.Sleep(checkGap)
 	}
 }

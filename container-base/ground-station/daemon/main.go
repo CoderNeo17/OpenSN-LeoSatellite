@@ -1,17 +1,22 @@
 package main
 
 import (
-	"ground/config"
-	"ground/data"
-	"ground/pkg/configure"
-	"ground/pkg/ifconfig"
 	"os"
 	"os/signal"
+	"ground-station/config"
+	"ground-station/data"
+	"ground-station/pkg/configure"
+	"ground-station/pkg/frr"
+	"ground-station/pkg/ifconfig"
 	"syscall"
 )
 
 func main() {
 	data.InitTopoInfoData()
+	err := frr.StartFrr()
+	if err != nil {
+		panic(err)
+	}
 	ifconfig.InitInterfaceWatcher()
 	configure.InitConfigurationWatcher(config.TopoInfoPath)
 	sigChan := make(chan os.Signal, 1)

@@ -35,7 +35,7 @@ func CreateContainer(instance *model.Instance) error {
 		}
 
 		var nMode = "none"
-		if instance.Type == "GroundStation" {
+		if instance.Type == "Anchor" {
 			nMode = "bridge"
 		}
 

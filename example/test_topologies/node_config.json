@@ -22,5 +22,13 @@
             "nano_cpu": "500M",
             "memory_byte": "128M"
         }
+    },
+    "Anchor": {
+        "image": "docker.io/realssd/anchor",
+        "container_envs": {},
+        "resource_limit": {
+            "nano_cpu": "50M",
+            "memory_byte": "128M"
+        }
     }
 }
