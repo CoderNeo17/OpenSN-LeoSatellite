@@ -38,15 +38,25 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     python3 \
     python3-pip \
+    dbus \
+    dbus-x11 \
+    pulseaudio \
+    alsa-utils \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install psutil 
 
 ENV DISPLAY=:0
 
 RUN tar -xJf /tmp/firefox.tar.xz -C /opt && \
     ln -s /opt/firefox/firefox /usr/local/bin/firefox && \
     rm /tmp/firefox.tar.xz
+
+RUN useradd -u 1000 -m user && \
+    mkdir -p /home/user && \
+    chown -R 1000:1000 /home/user
+
+ENV HOME=/home/user
+WORKDIR /home/user
 
 # CMD ["bash"]
 
