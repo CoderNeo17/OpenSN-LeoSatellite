@@ -3,8 +3,8 @@ package data
 import (
 	"encoding/json"
 	"os"
-	"satellite/config"
-	"satellite/model"
+	"ground-station/config"
+	"ground-station/model"
 	"time"
 
 	"github.com/sirupsen/logrus"

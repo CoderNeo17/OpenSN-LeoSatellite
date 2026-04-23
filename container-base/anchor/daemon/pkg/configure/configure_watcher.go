@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"satellite/data"
-	"satellite/model"
+	"anchor/data"
+	"anchor/model"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/sirupsen/logrus"

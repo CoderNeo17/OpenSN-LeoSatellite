@@ -3,7 +3,7 @@ package frr
 import (
 	"fmt"
 	"os"
-	"satellite/model"
+	"anchor/model"
 
 	"github.com/sirupsen/logrus"
 )

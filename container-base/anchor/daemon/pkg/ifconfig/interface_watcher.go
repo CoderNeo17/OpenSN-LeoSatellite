@@ -1,9 +1,9 @@
 package ifconfig
 
 import (
-	"satellite/data"
-	"satellite/model"
-	"satellite/pkg/frr"
+	"anchor/data"
+	"anchor/model"
+	"anchor/pkg/frr"
 	"time"
 
 	"github.com/sirupsen/logrus"

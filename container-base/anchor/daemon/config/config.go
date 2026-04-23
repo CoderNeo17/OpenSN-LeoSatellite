@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const Type = "Satellite"
+const Type = "Anchor"
 
 var TopoInfoPath = "/share/topo/%s"
 

@@ -1,4 +1,4 @@
-module satellite
+module ground-station
 
 go 1.20
 

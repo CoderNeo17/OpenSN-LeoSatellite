@@ -5,7 +5,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"satellite/utils"
+	"ground-station/utils"
 	"strconv"
 	"strings"
 	"time"

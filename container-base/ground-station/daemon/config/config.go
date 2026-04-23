@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const Type = "Satellite"
+const Type = "GroundStation"
 
 var TopoInfoPath = "/share/topo/%s"
 

@@ -1,8 +1,8 @@
 package ifconfig
 
 import (
-	"satellite/data"
-	"satellite/pkg/frr"
+	"ground-station/data"
+	"ground-station/pkg/frr"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -46,7 +46,7 @@ func InterfaceWatcher() {
 					logrus.Errorf("Set Addr %s to %s Error: %s", topoInfo.V4Addr, link.Attrs().Name, err.Error())
 					continue
 				}
-				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Satellite" ||
+				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" ||
 					data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Anchor" {
 					frr.EnableOspfOnInterface(link.Attrs().Name,false)
 				}

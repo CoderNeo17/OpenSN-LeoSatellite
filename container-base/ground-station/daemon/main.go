@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 	"os/signal"
-	"satellite/config"
-	"satellite/data"
-	"satellite/pkg/configure"
-	"satellite/pkg/frr"
-	"satellite/pkg/ifconfig"
+	"ground-station/config"
+	"ground-station/data"
+	"ground-station/pkg/configure"
+	"ground-station/pkg/frr"
+	"ground-station/pkg/ifconfig"
 	"syscall"
 )
 

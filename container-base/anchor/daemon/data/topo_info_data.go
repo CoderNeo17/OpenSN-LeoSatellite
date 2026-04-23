@@ -3,8 +3,8 @@ package data
 import (
 	"encoding/json"
 	"os"
-	"satellite/config"
-	"satellite/model"
+	"anchor/config"
+	"anchor/model"
 	"time"
 
 	"github.com/sirupsen/logrus"

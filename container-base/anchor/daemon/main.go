@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 	"os/signal"
-	"satellite/config"
-	"satellite/data"
-	"satellite/pkg/configure"
-	"satellite/pkg/frr"
-	"satellite/pkg/ifconfig"
+	"anchor/config"
+	"anchor/data"
+	"anchor/pkg/configure"
+	"anchor/pkg/frr"
+	"anchor/pkg/ifconfig"
 	"syscall"
 )
 
