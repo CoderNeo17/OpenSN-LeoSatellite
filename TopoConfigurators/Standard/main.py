@@ -155,8 +155,8 @@ if __name__ == "__main__":
     sim_elapsed = 0
     started = False
     anchored = False
-    trace = IperfTrace("trace.csv")
-    trace.start()
+    # trace = IperfTrace("trace.csv")
+    # trace.start()
 
     while True:
         node_list = cli.get_node_map()
@@ -197,7 +197,6 @@ if __name__ == "__main__":
 
         position_map: dict[str,Position] = {"":Position()}
         time_now = SIM_START + timedelta(seconds=sim_elapsed)
-        sim_elapsed += step_second
         for instance_id,instance_info in all_instance_map.items():
             time_now = SIM_START + timedelta(seconds=sim_elapsed)
             if instance_info.type in [TYPE_GROUND_STATION, TYPE_GROUND_TERMINAL]:   # NEW
@@ -219,6 +218,9 @@ if __name__ == "__main__":
             for gs in ground_station_list:
                 anchor(gs,anchor_node)
             anchored = True
+
+        if started:
+            sim_elapsed += step_second
 
         address_map = {}
         for node_index,node in node_list.items():
@@ -282,6 +284,8 @@ if __name__ == "__main__":
                 pos2 = position_map[link_info.end_infos[1].instance_id]
 
                 # detect GSL
+                elev = 0
+                dist = 0
                 if (
                     link_info.end_infos[0].instance_type != TYPE_SATELLITE or
                     link_info.end_infos[1].instance_type != TYPE_SATELLITE
@@ -294,24 +298,26 @@ if __name__ == "__main__":
 
                     elev = elevation_angle(gs_pos, sat_pos)
                     dist = distance_meter(gs_pos, sat_pos)
-
-                    bw = gsl_bandwidth(elev, dist)
-                    loss = gsl_loss(elev, dist)
-
-                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = bw
-                else:
-                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1000000
                 end0_type = link_info.end_infos[0].instance_type
                 end1_type = link_info.end_infos[1].instance_type
-                is_gsl = (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_STATION) or \
-                        (end0_type == TYPE_GROUND_STATION and end1_type == TYPE_SATELLITE) or \
-                        (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_TERMINAL) or \
+                is_gsl_up = (end0_type == TYPE_GROUND_STATION and end1_type == TYPE_SATELLITE) or \
                         (end0_type == TYPE_GROUND_TERMINAL and end1_type == TYPE_SATELLITE)
+                is_gsl_down = (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_STATION) or \
+                        (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_TERMINAL)
 
-                if is_gsl:
+                if is_gsl_up:
                     # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)
                     # End 0 is always satellite in your link model, so:
-                    downlink_bps, uplink_bps = trace.get_bandwidth(time_now)
+                    downlink_bps = gsl_bandwidth_down(elev, dist)
+                    uplink_bps   = gsl_bandwidth_up(elev, dist)
+                    link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
+                    link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
+                    logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
+                elif is_gsl_down:
+                    # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)
+                    # End 0 is always satellite in your link model, so:
+                    downlink_bps = gsl_bandwidth_up(elev, dist)
+                    uplink_bps   = gsl_bandwidth_down(elev, dist)
                     link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
                     link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
                     logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")

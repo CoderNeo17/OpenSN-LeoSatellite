@@ -5,7 +5,8 @@ import random
 # -----------------------------
 # CONFIG (tune these)
 # -----------------------------
-MAX_BW = 150e6        # 150 Mbps peak
+MAX_BW_UP = 15e6        # 15 Mbps peak
+MAX_BW_DOWN = 150e6      # 150 Mbps peak
 MIN_ELEV_DEG = 10     # cutoff
 NOISE_LEVEL = 0.1     # ±10% variation
 
@@ -13,7 +14,7 @@ NOISE_LEVEL = 0.1     # ±10% variation
 # -----------------------------
 # BANDWIDTH MODEL
 # -----------------------------
-def gsl_bandwidth(elev_rad, distance_m):
+def gsl_bandwidth_up(elev_rad, distance_m):
     """
     Continuous bandwidth model for Ground-Satellite Links
 
@@ -39,10 +40,46 @@ def gsl_bandwidth(elev_rad, distance_m):
     dist_factor = 1 / (1 + (distance_m / 2e6) ** 2)
 
     # --- raw capacity ---
-    capacity = MAX_BW * elev_factor * dist_factor
+    capacity = MAX_BW_UP * elev_factor * dist_factor
 
     # --- saturation (prevents unrealistic scaling) ---
-    capacity = capacity / (1 + capacity / MAX_BW)
+    capacity = capacity / (1 + capacity / MAX_BW_UP)
+
+    # --- small randomness (time variation) ---
+    noise = random.uniform(1 - NOISE_LEVEL, 1 + NOISE_LEVEL)
+
+    return int(capacity * noise)
+
+def gsl_bandwidth_down(elev_rad, distance_m):
+    """
+    Continuous bandwidth model for Ground-Satellite Links
+
+    Args:
+        elev_rad (float): elevation angle (radians)
+        distance_m (float): distance (meters)
+
+    Returns:
+        int: bandwidth in bits per second
+    """
+
+    elev_deg = math.degrees(elev_rad)
+
+    # --- cutoff ---
+    if elev_deg < MIN_ELEV_DEG:
+        return 0
+
+    # --- elevation factor (dominant) ---
+    elev_factor = math.sin(elev_rad)  # 0 → 1
+
+    # --- distance factor (smooth decay) ---
+    # scale ~2000 km
+    dist_factor = 1 / (1 + (distance_m / 2e6) ** 2)
+
+    # --- raw capacity ---
+    capacity = MAX_BW_DOWN * elev_factor * dist_factor
+
+    # --- saturation (prevents unrealistic scaling) ---
+    capacity = capacity / (1 + capacity / MAX_BW_DOWN)
 
     # --- small randomness (time variation) ---
     noise = random.uniform(1 - NOISE_LEVEL, 1 + NOISE_LEVEL)
@@ -70,8 +107,8 @@ def gsl_bandwidth_smooth(elev_rad, distance_m, time_s):
     elev_factor = math.sin(elev_rad)
     dist_factor = 1 / (1 + (distance_m / 2e6) ** 2)
 
-    capacity = MAX_BW * elev_factor * dist_factor
-    capacity = capacity / (1 + capacity / MAX_BW)
+    capacity = MAX_BW_UP * elev_factor * dist_factor
+    capacity = capacity / (1 + capacity / MAX_BW_UP)
 
     return int(capacity * smooth_noise(time_s))
 
