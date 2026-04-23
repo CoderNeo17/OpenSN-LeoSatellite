@@ -1,7 +1,11 @@
 from opensn.operator.emulator_operator import EmulatorOperator
 from opensn.model.instance import Instance
 from opensn.model.position import Position
-from opensn.const.dict_fields import PARAMETER_KEY_CONNECT,PARAMETER_KEY_DELAY,PARAMETER_KEY_BANDWIDTH,PARAMETER_KEY_LOSS
+from opensn.const.dict_fields import (
+    PARAMETER_KEY_CONNECT, PARAMETER_KEY_DELAY,
+    PARAMETER_KEY_BANDWIDTH, PARAMETER_KEY_LOSS,
+    PARAMETER_KEY_UPLINK_BANDWIDTH, PARAMETER_KEY_DOWNLINK_BANDWIDTH
+)
 from opensn.model.link import LinkBase
 from opensn.utils.tools import dec2ra
 from config import ADDR,PORT
@@ -15,6 +19,7 @@ from link_model import *
 from loguru import logger
 import json, math
 step_second = 1
+from trace import IperfTrace
 
 polar_threshold = dec2ra(66.5)
 
@@ -150,6 +155,8 @@ if __name__ == "__main__":
     sim_elapsed = 0
     started = False
     anchored = False
+    trace = IperfTrace("trace.csv")
+    trace.start()
 
     while True:
         node_list = cli.get_node_map()
@@ -294,6 +301,23 @@ if __name__ == "__main__":
                     link_info.parameter[PARAMETER_KEY_BANDWIDTH] = bw
                 else:
                     link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1000000
+                end0_type = link_info.end_infos[0].instance_type
+                end1_type = link_info.end_infos[1].instance_type
+                is_gsl = (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_STATION) or \
+                        (end0_type == TYPE_GROUND_STATION and end1_type == TYPE_SATELLITE) or \
+                        (end0_type == TYPE_SATELLITE and end1_type == TYPE_GROUND_TERMINAL) or \
+                        (end0_type == TYPE_GROUND_TERMINAL and end1_type == TYPE_SATELLITE)
+
+                if is_gsl:
+                    # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)
+                    # End 0 is always satellite in your link model, so:
+                    downlink_bps, uplink_bps = trace.get_bandwidth(time_now)
+                    link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
+                    link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
+                    logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
+                else:
+                    # ISL: keep symmetric
+                    link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1_000_000_000
                 link_info.parameter[PARAMETER_KEY_LOSS] = 150
                 cli.put_link_parameter(link_info.node_index,link_info.link_id,link_info.parameter)
 
