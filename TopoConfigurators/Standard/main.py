@@ -198,7 +198,6 @@ if __name__ == "__main__":
         position_map: dict[str,Position] = {"":Position()}
         time_now = SIM_START + timedelta(seconds=sim_elapsed)
         for instance_id,instance_info in all_instance_map.items():
-            time_now = SIM_START + timedelta(seconds=sim_elapsed)
             if instance_info.type in [TYPE_GROUND_STATION, TYPE_GROUND_TERMINAL]:   # NEW
                 new_postion = Position()
                 new_postion.latitude = float(instance_info.extra[EX_LATITUDE_KEY])/180 * math.pi if EX_LATITUDE_KEY in instance_info.extra.keys() else 0
@@ -279,6 +278,8 @@ if __name__ == "__main__":
                     position_map[link_info.end_infos[1].instance_id]
                 )
                 delay = int(get_propagation_delay_s(distance)*1000000)
+                if link_info.end_infos[0].instance_type == TYPE_ANCHOR_NODE or link_info.end_infos[1].instance_type == TYPE_ANCHOR_NODE:
+                    delay = 0
                 link_info.parameter[PARAMETER_KEY_DELAY] = delay
                 pos1 = position_map[link_info.end_infos[0].instance_id]
                 pos2 = position_map[link_info.end_infos[1].instance_id]
@@ -312,7 +313,7 @@ if __name__ == "__main__":
                     uplink_bps   = gsl_bandwidth_up(elev, dist)
                     link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
                     link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
-                    logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
+                    # logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
                 elif is_gsl_down:
                     # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)
                     # End 0 is always satellite in your link model, so:
@@ -320,7 +321,7 @@ if __name__ == "__main__":
                     uplink_bps   = gsl_bandwidth_down(elev, dist)
                     link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
                     link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
-                    logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
+                    # logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
                 else:
                     # ISL: keep symmetric
                     link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1_000_000_000

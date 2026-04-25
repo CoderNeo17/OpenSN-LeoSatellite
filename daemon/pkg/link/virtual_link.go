@@ -60,17 +60,17 @@ var VirtualLinkParameterMap = map[string]model.ParameterInfo{
 }
 
 var TbfQdiscTemplate = netlink.Tbf{
-    QdiscAttrs: netlink.QdiscAttrs{
-        Handle: netlink.MakeHandle(1, 0),
-        Parent: netlink.HANDLE_ROOT,
-    },
+	QdiscAttrs: netlink.QdiscAttrs{
+		Handle: netlink.MakeHandle(2, 0),
+		Parent: netlink.MakeHandle(1, 0),
+	},
 }
 var NetemQdiscTemplate = netlink.NewNetem(
-    netlink.QdiscAttrs{
-        Handle: netlink.MakeHandle(2, 0),
-        Parent: netlink.MakeHandle(1, 0),
-    },
-    netlink.NetemQdiscAttrs{},
+	netlink.QdiscAttrs{
+		Handle: netlink.MakeHandle(1, 0),
+		Parent: netlink.HANDLE_ROOT,
+	},
+	netlink.NetemQdiscAttrs{},
 )
 
 type VethLink struct {
@@ -373,7 +373,7 @@ func (l *VethLink) SetParameters(oldPara, newPara map[string]int64) error {
 			continue
 		}
 
-		if dirtyNetem {
+		if dirtyNetem || dirtyTbf{
 			for i, v := range l.EndInfos {
 				if v.EndNodeIndex != key.NodeIndex {
 					continue

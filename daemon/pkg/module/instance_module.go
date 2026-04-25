@@ -5,6 +5,7 @@ import (
 	"NodeDaemon/data"
 	"NodeDaemon/model"
 	"encoding/json"
+	"os"
 
 	"NodeDaemon/share/dir"
 	"NodeDaemon/share/key"
@@ -34,6 +35,21 @@ func CreateContainer(instance *model.Instance) error {
 			StopTimeout: &StopTimeoutSecond,
 		}
 
+		if instance.Type == "GroundTerminal" {
+			containerConfig = &container.Config{
+				Hostname: instance.InstanceID,
+				Image:    instance.Image,
+				User:     "1000:1000",
+				Env: []string{
+					fmt.Sprintf("DISPLAY=%s", os.Getenv("DISPLAY")),
+					"XAUTHORITY=/home/user/.Xauthority",
+					fmt.Sprintf("XDG_RUNTIME_DIR=/run/user/%d", 1000),
+					fmt.Sprintf("PULSE_SERVER=unix:/run/user/%d/pulse/native", 1000),
+				},
+				StopTimeout: &StopTimeoutSecond,
+			}
+		}
+
 		var nMode = "none"
 		if instance.Type == "Anchor" {
 			nMode = "bridge"
@@ -43,15 +59,33 @@ func CreateContainer(instance *model.Instance) error {
 			fmt.Sprintf("%s:%s", dir.MountShareData, "/share"),
 		}
 
-		if instance.Type == "GroundTerminal" {
-			bind := fmt.Sprintf("%s:%s", "/tmp/.X11-unix", "/tmp/.X11-unix")
-			binds = append(binds, bind)
-		}
-
 		resource := container.Resources{
 				NanoCPUs: instance.Resource.NanoCPU,
 				Memory:   instance.Resource.MemoryByte,
 			}
+
+		if instance.Type == "GroundTerminal" {
+			bind1 := fmt.Sprintf("%s:%s", "/tmp/.X11-unix", "/tmp/.X11-unix")
+			bind2 := fmt.Sprintf("%s/.Xauthority:/home/user/.Xauthority", os.Getenv("HOME"))
+			bind3 := fmt.Sprintf("/run/user/%d:/run/user/%d", 1000, 1000)
+			binds = append(binds, bind1, bind2, bind3)
+			resource = container.Resources{
+				Devices: []container.DeviceMapping{
+						{
+							PathOnHost:        "/dev/video0",
+							PathInContainer:   "/dev/video0",
+							CgroupPermissions: "rwm",
+						},
+						{
+							PathOnHost:        "/dev/snd",
+							PathInContainer:   "/dev/snd",
+							CgroupPermissions: "rwm",
+						},
+					},
+			}
+		}
+
+		
 		
 		var hostConfig *container.HostConfig
 		if instance.Type == "GroundTerminal" {
@@ -59,7 +93,9 @@ func CreateContainer(instance *model.Instance) error {
 				Privileged:  true,
 				NetworkMode: container.NetworkMode(nMode),
 				DNS:         []string{"8.8.8.8"},
-				Binds: binds,
+				Binds:       binds,
+				GroupAdd:    []string{"audio", "video"},
+				Resources: 	resource,
 			}
 		} else {
 			hostConfig = &container.HostConfig{

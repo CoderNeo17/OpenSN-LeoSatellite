@@ -9,7 +9,7 @@ ARGP = 0.0
 MEAN_MOTION = 15.055
 EPOCH = "26060.45726852"
 
-F = 0.25  # ⭐ Walker phasing parameter
+F = 0  # ⭐ Walker phasing parameter
 
 
 def checksum(line):

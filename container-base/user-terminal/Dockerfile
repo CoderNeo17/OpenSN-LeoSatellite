@@ -58,10 +58,6 @@ RUN useradd -u 1000 -m user && \
 ENV HOME=/home/user
 WORKDIR /home/user
 
-# CMD ["bash"]
-
-# CMD [ "/Workspace/entrypoint"]
-
 COPY scripts/entrypoint /Workspace/entrypoint
 COPY home /home
 RUN chmod +x /Workspace/entrypoint

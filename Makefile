@@ -12,7 +12,7 @@ build:
 # 	sudo cp container-base/*.tar.gz opensn_build/node-images/
 	sudo cp -r daemon/opensn-daemon opensn_build/
 # 	mkdir -p opensn_build/depend-images
-# 	sudo cp dependencies/*.tar.gz opensn_build/depend-images/
+	sudo cp dependencies/*.tar.gz opensn_build/depend-images/
 # 	sudo cp -r TopoConfigurators opensn_build/
 # 	sudo cp -r tools opensn_build/
 	sudo tar cvf opensn_build.tar.gz opensn_build/*
