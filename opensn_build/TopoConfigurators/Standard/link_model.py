@@ -152,28 +152,38 @@ def elevation_angle(gs_pos, sat_pos):
 
     return elev
 
+import math
+import random
+
 def gsl_loss(elev_rad, distance_m):
     """
-    Continuous loss model (ppm = parts per million)
+    Realistic GSL loss model
+    Output: units = 100 × percentage loss
+    (1 = 0.01%, 100 = 1%)
     """
 
     elev_deg = math.degrees(elev_rad)
 
     # --- cutoff ---
     if elev_deg < 10:
-        return 1000000  # effectively dead link
+        return 10000  # 100% loss
 
-    # --- base loss (very low) ---
-    loss = 20  # 0.002%
+    # --- base loss (clean link) ---
+    # ~0.02–0.05% typical
+    base = 3  
 
-    # --- elevation penalty (dominant) ---
-    # sharp degradation near horizon
-    loss += int(2000 / (math.sin(elev_rad) + 0.05))
+    # --- elevation loss (smooth exponential) ---
+    # steep near horizon, flat at high elevation
+    elev_loss = 80 * math.exp(-0.08 * elev_deg)
 
-    # --- distance penalty ---
-    loss += int(distance_m / 10000)
+    # --- distance loss (weak effect) ---
+    # only noticeable for long slant ranges
+    dist_loss = (distance_m / 1_000_000) * 2  # ~0–4 units
 
-    # --- mild randomness (not too noisy) ---
-    loss = int(loss * random.uniform(0.85, 1.15))
+    # --- combine ---
+    loss = base + elev_loss + dist_loss
 
-    return loss
+    # --- controlled randomness (real links are bursty, not uniform noise) ---
+    loss *= random.uniform(0.9, 1.2)
+
+    return int(loss)

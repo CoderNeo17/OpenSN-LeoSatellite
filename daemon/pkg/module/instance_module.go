@@ -26,8 +26,10 @@ var InstanceParallelLimitChan chan uint8
 
 func CreateContainer(instance *model.Instance) error {
 	containerID := fmt.Sprintf("%s_%s", instance.Type, instance.InstanceID)
+
 	err := utils.DoWithRetry(func() error {
 
+		// ---------------- CONTAINER CONFIG ----------------
 		containerConfig := &container.Config{
 			Hostname:    instance.InstanceID,
 			Image:       instance.Image,
@@ -35,78 +37,75 @@ func CreateContainer(instance *model.Instance) error {
 			StopTimeout: &StopTimeoutSecond,
 		}
 
+		// GroundTerminal specific env (GUI + audio)
 		if instance.Type == "GroundTerminal" {
-			containerConfig = &container.Config{
-				Hostname: instance.InstanceID,
-				Image:    instance.Image,
-				User:     "1000:1000",
-				Env: []string{
-					fmt.Sprintf("DISPLAY=%s", os.Getenv("DISPLAY")),
-					"XAUTHORITY=/home/user/.Xauthority",
-					fmt.Sprintf("XDG_RUNTIME_DIR=/run/user/%d", 1000),
-					fmt.Sprintf("PULSE_SERVER=unix:/run/user/%d/pulse/native", 1000),
-				},
-				StopTimeout: &StopTimeoutSecond,
+			containerConfig.Env = []string{
+				fmt.Sprintf("DISPLAY=%s", os.Getenv("DISPLAY")),
+				"XAUTHORITY=/home/user/.Xauthority",
+				"XDG_RUNTIME_DIR=/run/user/1000",
+				"PULSE_SERVER=unix:/run/user/1000/pulse/native",
 			}
+			// ❌ DO NOT set User here → we want root entrypoint
 		}
 
-		var nMode = "none"
+		// ---------------- NETWORK MODE ----------------
+		nMode := "none"
 		if instance.Type == "Anchor" {
-			nMode = "bridge"
+			nMode = "host"
 		}
 
+		// ---------------- BINDS ----------------
 		binds := []string{
 			fmt.Sprintf("%s:%s", dir.MountShareData, "/share"),
+			fmt.Sprintf("%s/%s:%s","/home/psbabhishek","OpenSN-Library/opensn_build/opensn-daemon/topo","/topo"),
 		}
 
-		resource := container.Resources{
+		// Extra binds for GroundTerminal (GUI/audio)
+		if instance.Type == "GroundTerminal" {
+			binds = append(binds,
+				"/tmp/.X11-unix:/tmp/.X11-unix",
+				fmt.Sprintf("%s/.Xauthority:/home/user/.Xauthority", os.Getenv("HOME")),
+				fmt.Sprintf("/run/user/%d:/run/user/%d", 1000, 1000),
+			)
+		}
+
+		// ---------------- HOST CONFIG ----------------
+		hostConfig := &container.HostConfig{
+			Privileged:  true, // needed for routing + devices
+			NetworkMode: container.NetworkMode(nMode),
+			DNS:         []string{"8.8.8.8"},
+			Binds:       binds,
+		}
+
+		// ---------------- RESOURCES ----------------
+		// Only apply limits for NON GroundTerminal
+		if instance.Type != "GroundTerminal" {
+			hostConfig.Resources = container.Resources{
 				NanoCPUs: instance.Resource.NanoCPU,
 				Memory:   instance.Resource.MemoryByte,
 			}
+		}
 
+		// ---------------- DEVICES + GROUPS ----------------
 		if instance.Type == "GroundTerminal" {
-			bind1 := fmt.Sprintf("%s:%s", "/tmp/.X11-unix", "/tmp/.X11-unix")
-			bind2 := fmt.Sprintf("%s/.Xauthority:/home/user/.Xauthority", os.Getenv("HOME"))
-			bind3 := fmt.Sprintf("/run/user/%d:/run/user/%d", 1000, 1000)
-			binds = append(binds, bind1, bind2, bind3)
-			resource = container.Resources{
-				Devices: []container.DeviceMapping{
-						{
-							PathOnHost:        "/dev/video0",
-							PathInContainer:   "/dev/video0",
-							CgroupPermissions: "rwm",
-						},
-						{
-							PathOnHost:        "/dev/snd",
-							PathInContainer:   "/dev/snd",
-							CgroupPermissions: "rwm",
-						},
-					},
+			hostConfig.GroupAdd = []string{"audio", "video"}
+
+			// Optional (not strictly needed with privileged=true)
+			hostConfig.Devices = []container.DeviceMapping{
+				{
+					PathOnHost:        "/dev/video0",
+					PathInContainer:   "/dev/video0",
+					CgroupPermissions: "rwm",
+				},
+				{
+					PathOnHost:        "/dev/snd",
+					PathInContainer:   "/dev/snd",
+					CgroupPermissions: "rwm",
+				},
 			}
 		}
 
-		
-		
-		var hostConfig *container.HostConfig
-		if instance.Type == "GroundTerminal" {
-			hostConfig = &container.HostConfig{
-				Privileged:  true,
-				NetworkMode: container.NetworkMode(nMode),
-				DNS:         []string{"8.8.8.8"},
-				Binds:       binds,
-				GroupAdd:    []string{"audio", "video"},
-				Resources: 	resource,
-			}
-		} else {
-			hostConfig = &container.HostConfig{
-				Privileged:  true,
-				NetworkMode: container.NetworkMode(nMode),
-				DNS:         []string{"8.8.8.8"},
-				Binds: binds,
-				Resources: resource,
-			}
-		}
-
+		// ---------------- CREATE ----------------
 		_, err := utils.DockerClient.ContainerCreate(
 			context.Background(),
 			containerConfig,
@@ -116,16 +115,13 @@ func CreateContainer(instance *model.Instance) error {
 			containerID,
 		)
 
-		if err != nil {
-			return err
-		}
-
 		return err
 	}, 4)
 
 	if err != nil {
-		return fmt.Errorf("create container %s Error: %s", containerID, err.Error())
+		return fmt.Errorf("create container %s error: %s", containerID, err.Error())
 	}
+
 	return nil
 }
 

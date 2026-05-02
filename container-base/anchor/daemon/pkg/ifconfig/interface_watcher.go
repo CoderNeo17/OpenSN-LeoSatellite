@@ -2,15 +2,15 @@ package ifconfig
 
 import (
 	"anchor/data"
-	"anchor/model"
-	"anchor/pkg/frr"
+	// "anchor/model"
+	// "anchor/pkg/frr"
 	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 )
 
-const checkGap = 500 * time.Millisecond
+const checkGap = 10 * time.Millisecond
 
 var linkReadymap = make(map[string]bool)
 
@@ -46,9 +46,9 @@ func InterfaceWatcher() {
 					logrus.Errorf("Set Addr %s to %s Error: %s", topoInfo.V4Addr, link.Attrs().Name, err.Error())
 					continue
 				}
-				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" {
-					frr.InitConfigBatch([]*model.LinkInfo{topoInfo})
-				}
+				// if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" {
+				// 	frr.InitConfigBatch([]*model.LinkInfo{topoInfo})
+				// }
 				logrus.Infof("Init Interface %s Success.", link.Attrs().Name)
 				linkReadymap[link.Attrs().Name] = true
 			} else {

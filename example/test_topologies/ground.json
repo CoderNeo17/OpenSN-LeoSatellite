@@ -1,0 +1,54 @@
+{
+  "terrestrial_nodes": [
+    {
+      "type": "GroundStation",
+      "extra": {
+        "GroundStationIndex": "0",
+        "latitude": "28.6139",
+        "longitude": "77.2090",
+        "altitude": "6.0"
+      },
+      "device_info": {}
+    },
+    {
+      "type": "GroundStation",
+      "extra": {
+        "GroundStationIndex": "1",
+        "latitude": "22.5726",
+        "longitude": "88.3639",
+        "altitude": "6.0"
+      },
+      "device_info": {}
+    },
+    {
+      "type": "GroundStation",
+      "extra": {
+        "GroundStationIndex": "2",
+        "latitude": "13.0827",
+        "longitude": "80.2707",
+        "altitude": "6.0"
+      },
+      "device_info": {}
+    },
+    {
+      "type": "GroundTerminal",
+      "extra": {
+        "GroundTerminalIndex": "0",
+        "latitude": "17.3850",
+        "longitude": "78.4867",
+        "altitude": "12.0"
+      },
+      "device_info": {}
+    },
+    {
+      "type": "Anchor",
+      "extra": {
+        "AnchorIndex": "0",
+        "latitude": "13.0827",
+        "longitude": "80.2707",
+        "altitude": "0.5"
+      },
+      "device_info": {}
+    }
+  ]
+}

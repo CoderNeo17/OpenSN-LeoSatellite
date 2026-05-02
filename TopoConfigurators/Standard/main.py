@@ -108,7 +108,11 @@ def handle_gsl_handover(cli, node, node_type_label, position_map, all_instance_m
             address1 = old_link[old_link_id].address_infos[0]
             address2 = old_link[old_link_id].address_infos[1]
     else:
-        subnet = alloc_ipv4(30)
+        subnet = None
+        if node.type == TYPE_GROUND_STATION:
+            subnet = alloc_ipv4(30, pool="gsl")
+        elif node.type == TYPE_GROUND_TERMINAL:
+            subnet = alloc_ipv4(30, pool="ut")
         address1 = {LINK_V4_ADDR_KEY: format_ipv4(subnet[1], 30)}
         address2 = {LINK_V4_ADDR_KEY: format_ipv4(subnet[2], 30)}
         logger.info("[%s] Switch %s from None to %s" % (
@@ -132,7 +136,7 @@ def handle_gsl_handover(cli, node, node_type_label, position_map, all_instance_m
 
 
 def anchor(gs,anc):
-    subnet = alloc_ipv4(30)
+    subnet = alloc_ipv4(30,pool="anchor")
     cli.enable_link_between(
         anc.node_index,
         anc.instance_id,
@@ -155,6 +159,7 @@ if __name__ == "__main__":
     sim_elapsed = 0
     started = False
     anchored = False
+    anchor_node : Instance = None
     # trace = IperfTrace("trace.csv")
     # trace.start()
 
@@ -164,7 +169,6 @@ if __name__ == "__main__":
         node_link_map: dict[int,dict[str,LinkBase]] = {}
         ground_station_list: list[Instance] = []
         user_terminal_list: list[Instance] = []          # NEW
-        anchor_node : Instance = None
 
         for node_index,node in node_list.items():
             instance_map = cli.get_instance_map(node_index)
@@ -314,18 +318,20 @@ if __name__ == "__main__":
                     link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
                     link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
                     # logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
+                    link_info.parameter[PARAMETER_KEY_LOSS] = gsl_loss(elev, dist)
                 elif is_gsl_down:
                     # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)
                     # End 0 is always satellite in your link model, so:
                     downlink_bps = gsl_bandwidth_up(elev, dist)
                     uplink_bps   = gsl_bandwidth_down(elev, dist)
-                    link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
-                    link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
+                    link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps
+                    link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps
                     # logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
+                    link_info.parameter[PARAMETER_KEY_LOSS] = gsl_loss(elev, dist)
                 else:
                     # ISL: keep symmetric
                     link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1_000_000_000
-                link_info.parameter[PARAMETER_KEY_LOSS] = 150
+                    link_info.parameter[PARAMETER_KEY_LOSS] = 20
                 cli.put_link_parameter(link_info.node_index,link_info.link_id,link_info.parameter)
 
         for instance_id,instance_info in all_instance_map.items():

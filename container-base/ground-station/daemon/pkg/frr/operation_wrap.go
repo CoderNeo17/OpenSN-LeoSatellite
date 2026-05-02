@@ -13,7 +13,10 @@ func InitOspf() error {
     logrus.Info("Initializing OSPF base configuration")
 
     batch := `
+bfd
+
 router ospf
+ timers throttle spf 0 20 100
 `
 
     confFile, err := os.Create(CommandBatchPath)
@@ -37,7 +40,7 @@ router ospf
     return nil
 }
 
-func EnableOspfOnInterface(ifName string, passive bool) error {
+func EnableOspfOnInterface(ifName string, passive bool, area int) error {
     logrus.Infof("Configuring OSPF on interface %s (passive=%v)", ifName, passive)
 
     var cmd string
@@ -45,13 +48,16 @@ func EnableOspfOnInterface(ifName string, passive bool) error {
         cmd = fmt.Sprintf(`
 interface %s
  ip ospf area 0
- ip ospf passive
+ ip ospf bfd
 `, ifName)
     } else {
         cmd = fmt.Sprintf(`
 interface %s
- ip ospf area 0
-`, ifName)
+ ip ospf area %d
+ ip ospf network point-to-point
+ ip ospf dead-interval minimal hello-multiplier 5
+ ip ospf bfd
+`, ifName, area)
     }
 
     confFile, err := os.Create(CommandBatchPath)

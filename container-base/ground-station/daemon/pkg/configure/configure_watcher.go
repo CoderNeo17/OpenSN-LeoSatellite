@@ -45,6 +45,7 @@ func InitConfigurationWatcher(watchPath string) {
 				newConfiguration, err := parseConfigFile(watchPath)
 				if err == nil {
 					data.TopoInfo = newConfiguration
+					logrus.Infof("Configuration file updated")
 				}
 			}
 		}

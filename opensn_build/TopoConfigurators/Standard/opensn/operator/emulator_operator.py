@@ -106,7 +106,7 @@ class EmulatorOperator:
         return put_instance_config_if_not_exist(self.etcd_client,node_index,instance_id,config_seq)
 
     def put_instance_config_async(self,node_index:int,instance_id:str,config_seq:str):
-        return self.__pool.submit(put_emulation_config,node_index,instance_id,config_seq)
+        return self.__pool.submit(put_instance_config,self.etcd_client,node_index,instance_id,config_seq)
     def enable_link_between(
             self,
             node_index1:int,

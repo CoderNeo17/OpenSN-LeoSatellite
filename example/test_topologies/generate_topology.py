@@ -9,7 +9,7 @@ ARGP = 0.0
 MEAN_MOTION = 15.055
 EPOCH = "26060.45726852"
 
-F = 0  # ⭐ Walker phasing parameter
+F = 0.1  # ⭐ Walker phasing parameter
 
 
 def checksum(line):
@@ -90,28 +90,29 @@ def generate(num_planes, sats_per_plane, start_raan, start_M):
 
             cur = idx(p, s)
 
-            # intra-plane ring
-            nxt = idx(p, (s + 1) % sats_per_plane)
+            # intra-plane (no wraparound)
+            if s + 1 < sats_per_plane:
+                nxt = idx(p, s + 1)
 
-            links.append({
-                "end_indexes": [cur, nxt],
-                "type": "vlink",
-                "init_parameter": {},
-                "address_infos": [{}, {}],
-                "extra": {}
-            })
+                links.append({
+                    "end_indexes": [cur, nxt],
+                    "type": "vlink",
+                    "init_parameter": {},
+                    "address_infos": [{}, {}],
+                    "extra": {}
+                })
 
-            # inter-plane
-            nxt_plane = (p + 1) % num_planes
-            vertical = idx(nxt_plane, s)
+            # inter-plane (no wraparound)
+            if p + 1 < num_planes:
+                vertical = idx(p + 1, s)
 
-            links.append({
-                "end_indexes": [cur, vertical],
-                "type": "vlink",
-                "init_parameter": {},
-                "address_infos": [{}, {}],
-                "extra": {}
-            })
+                links.append({
+                    "end_indexes": [cur, vertical],
+                    "type": "vlink",
+                    "init_parameter": {},
+                    "address_infos": [{}, {}],
+                    "extra": {}
+                })
 
     return {
         "instances": instances,

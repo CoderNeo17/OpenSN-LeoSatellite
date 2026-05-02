@@ -3,7 +3,7 @@
         "image": "docker.io/realssd/satellite-router",
         "container_envs": {},
         "resource_limit": {
-            "nano_cpu": "50M",
+            "nano_cpu": "100M",
             "memory_byte": "128M"
         }
     },
@@ -11,7 +11,7 @@
         "image": "docker.io/realssd/ground-station",
         "container_envs": {},
         "resource_limit": {
-            "nano_cpu": "50M",
+            "nano_cpu": "100M",
             "memory_byte": "128M"
         }
     },

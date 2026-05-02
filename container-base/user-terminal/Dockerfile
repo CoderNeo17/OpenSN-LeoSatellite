@@ -42,6 +42,7 @@ RUN apt-get update && apt-get install -y \
     dbus-x11 \
     pulseaudio \
     alsa-utils \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 

@@ -52,6 +52,21 @@ func StartOspfd() error {
 	return err
 }
 
+func StartBfdd() error {
+	// /usr/lib/frr/bfdd -d -F traditional -A 127.0.0.1
+	cmd := exec.Command(
+		"/usr/lib/frr/bfdd", "-d",
+		"-F", "traditional",
+		"-A", "127.0.0.1",
+	)
+	err := cmd.Run()
+	if err != nil {
+		logrus.Errorf("Start Bfdd Error: %s", err.Error())
+		return err
+	}
+	return err
+}
+
 func WriteOspfConfig(batchPath string) error {
 	cmd := exec.Command(
 		"/usr/bin/vtysh",

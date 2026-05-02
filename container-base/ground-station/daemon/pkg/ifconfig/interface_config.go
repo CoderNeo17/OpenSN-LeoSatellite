@@ -162,8 +162,8 @@ func EnableNAT() error {
     cmd := exec.Command(
         "iptables", "-t", "nat",
         "-A", "POSTROUTING",
-        "-s", "10.0.0.0/16",
-        "-o", "eth0",
+        "-s", "10.0.0.0/14",
+        "!", "-o", "lo",
         "-j", "MASQUERADE",
     )
     return cmd.Run()
