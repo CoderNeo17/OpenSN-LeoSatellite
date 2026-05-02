@@ -236,7 +236,7 @@ if __name__ == "__main__":
                 if link_info.address_infos[0] is None:
                     continue
                 if LINK_V4_ADDR_KEY not in link_info.address_infos[0] or \
-                    LINK_V4_ADDR_KEY not in link_info.address_infos[1] is None:
+                    LINK_V4_ADDR_KEY not in link_info.address_infos[1]:
                     if link_id not in address_map.keys():
                         address_map[link_id] = alloc_ipv4(30)
                     
@@ -320,6 +320,8 @@ if __name__ == "__main__":
                     uplink_bps   = gsl_bandwidth_up(elev, dist)
                     link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
                     link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
+                    loss_ppm = gsl_loss(elev, dist)
+                    link_info.parameter[PARAMETER_KEY_LOSS] = min(loss_ppm, 500)  # cap at 0.05%
                     # logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
                 elif is_gsl_down:
                     # Example: 20 Mbps downlink (sat→ground), 5 Mbps uplink (ground→sat)
@@ -328,11 +330,13 @@ if __name__ == "__main__":
                     uplink_bps   = gsl_bandwidth_down(elev, dist)
                     link_info.parameter[PARAMETER_KEY_UPLINK_BANDWIDTH]   = uplink_bps   # 5 Mbps
                     link_info.parameter[PARAMETER_KEY_DOWNLINK_BANDWIDTH] = downlink_bps  # 20 Mbps
+                    loss_ppm = gsl_loss(elev, dist)
+                    link_info.parameter[PARAMETER_KEY_LOSS] = min(loss_ppm, 500)  # cap at 0.05%
                     # logger.info(f"Updated GSL bandwidth for link {link_id}: uplink {uplink_bps} bps, downlink {downlink_bps} bps")
                 else:
                     # ISL: keep symmetric
                     link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1_000_000_000
-                link_info.parameter[PARAMETER_KEY_LOSS] = 150
+                    link_info.parameter[PARAMETER_KEY_LOSS] = 0
                 cli.put_link_parameter(link_info.node_index,link_info.link_id,link_info.parameter)
 
         for instance_id,instance_info in all_instance_map.items():

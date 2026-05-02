@@ -8,82 +8,42 @@ import random
 MAX_BW_UP = 15e6        # 15 Mbps peak
 MAX_BW_DOWN = 150e6      # 150 Mbps peak
 MIN_ELEV_DEG = 10     # cutoff
-NOISE_LEVEL = 0.1     # ±10% variation
+NOISE_LEVEL = 0.05     # ±10% variation
 
 
 # -----------------------------
 # BANDWIDTH MODEL
 # -----------------------------
 def gsl_bandwidth_up(elev_rad, distance_m):
-    """
-    Continuous bandwidth model for Ground-Satellite Links
-
-    Args:
-        elev_rad (float): elevation angle (radians)
-        distance_m (float): distance (meters)
-
-    Returns:
-        int: bandwidth in bits per second
-    """
-
     elev_deg = math.degrees(elev_rad)
-
-    # --- cutoff ---
     if elev_deg < MIN_ELEV_DEG:
         return 0
 
-    # --- elevation factor (dominant) ---
-    elev_factor = math.sin(elev_rad)  # 0 → 1
+    elev_factor = math.sin(elev_rad)
 
-    # --- distance factor (smooth decay) ---
-    # scale ~2000 km
-    dist_factor = 1 / (1 + (distance_m / 2e6) ** 2)
+    # rescaled to 500km so distance actually varies across GSL range
+    dist_factor = 1 / (1 + (distance_m / 500_000) ** 2)
 
-    # --- raw capacity ---
     capacity = MAX_BW_UP * elev_factor * dist_factor
+    # remove the saturation line entirely
 
-    # --- saturation (prevents unrealistic scaling) ---
-    capacity = capacity / (1 + capacity / MAX_BW_UP)
-
-    # --- small randomness (time variation) ---
     noise = random.uniform(1 - NOISE_LEVEL, 1 + NOISE_LEVEL)
-
     return int(capacity * noise)
 
 def gsl_bandwidth_down(elev_rad, distance_m):
-    """
-    Continuous bandwidth model for Ground-Satellite Links
-
-    Args:
-        elev_rad (float): elevation angle (radians)
-        distance_m (float): distance (meters)
-
-    Returns:
-        int: bandwidth in bits per second
-    """
-
     elev_deg = math.degrees(elev_rad)
-
-    # --- cutoff ---
     if elev_deg < MIN_ELEV_DEG:
         return 0
 
-    # --- elevation factor (dominant) ---
-    elev_factor = math.sin(elev_rad)  # 0 → 1
+    elev_factor = math.sin(elev_rad)
 
-    # --- distance factor (smooth decay) ---
-    # scale ~2000 km
-    dist_factor = 1 / (1 + (distance_m / 2e6) ** 2)
+    # rescaled to 500km so distance actually varies across GSL range
+    dist_factor = 1 / (1 + (distance_m / 500_000) ** 2)
 
-    # --- raw capacity ---
     capacity = MAX_BW_DOWN * elev_factor * dist_factor
+    # remove the saturation line entirely
 
-    # --- saturation (prevents unrealistic scaling) ---
-    capacity = capacity / (1 + capacity / MAX_BW_DOWN)
-
-    # --- small randomness (time variation) ---
     noise = random.uniform(1 - NOISE_LEVEL, 1 + NOISE_LEVEL)
-
     return int(capacity * noise)
 
 
@@ -153,27 +113,14 @@ def elevation_angle(gs_pos, sat_pos):
     return elev
 
 def gsl_loss(elev_rad, distance_m):
-    """
-    Continuous loss model (ppm = parts per million)
-    """
-
     elev_deg = math.degrees(elev_rad)
+    if elev_deg < MIN_ELEV_DEG:
+        return 10000  # 0.1% at cutoff, not 100%
 
-    # --- cutoff ---
-    if elev_deg < 10:
-        return 1000000  # effectively dead link
-
-    # --- base loss (very low) ---
-    loss = 20  # 0.002%
-
-    # --- elevation penalty (dominant) ---
-    # sharp degradation near horizon
-    loss += int(2000 / (math.sin(elev_rad) + 0.05))
-
-    # --- distance penalty ---
-    loss += int(distance_m / 10000)
-
-    # --- mild randomness (not too noisy) ---
-    loss = int(loss * random.uniform(0.85, 1.15))
-
-    return loss
+    # real Starlink: ~0.01-0.05% baseline, up to ~0.5% near horizon
+    base = 100  # 0.001% always-on baseline
+    elev_penalty = int(400 / (math.sin(elev_rad) + 0.1))  # gentler curve
+    noise = random.uniform(0.8, 1.2)
+    return int((base + elev_penalty) * noise)
+    # at 45°: (100 + 400/0.807) ≈ 596 → 0.006% — realistic
+    # at 15°: (100 + 400/0.359) ≈ 1214 → 0.012% — still realistic
