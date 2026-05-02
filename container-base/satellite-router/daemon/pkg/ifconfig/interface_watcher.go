@@ -40,11 +40,12 @@ func InterfaceWatcher() {
 					logrus.Errorf("Set Addr %s to %s Error: %s", topoInfo.V4Addr, link.Attrs().Name, err.Error())
 					continue
 				}
-				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Satellite" ||
-					data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" {
-					frr.EnableOspfOnInterface(link.Attrs().Name,false)
+				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Satellite"  {
+					frr.EnableOspfOnInterface(link.Attrs().Name,false,1)
+				}else if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" {
+					frr.EnableOspfOnInterface(link.Attrs().Name,false,0)
 				}else if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundTerminal" {
-					frr.EnableOspfOnInterface(link.Attrs().Name,true)
+					frr.EnableOspfOnInterface(link.Attrs().Name,true,1)
 				}
 				logrus.Infof("Init Interface %s Success.", link.Attrs().Name)
 				linkReadymap[link.Attrs().Name] = true

@@ -5,14 +5,14 @@ build:
 # 	cd ui && make build && cd ..
 # 	mkdir -p daemon/share/static/dist/
 # # 	cp -r ui/build/ daemon/share/static/dist/
-# 	cd container-base && make build && cd ..
+	cd container-base && make build && cd ..
 # # 	cd dependencies && make build && cd ..
 	cd daemon && make build && cd ..
 # 	mkdir -p opensn_build/node-images
-# 	sudo cp container-base/*.tar.gz opensn_build/node-images/
+	sudo cp container-base/*.tar.gz opensn_build/node-images/
 	sudo cp -r daemon/opensn-daemon opensn_build/
 # 	mkdir -p opensn_build/depend-images
-	sudo cp dependencies/*.tar.gz opensn_build/depend-images/
+# 	sudo cp dependencies/*.tar.gz opensn_build/depend-images/
 # 	sudo cp -r TopoConfigurators opensn_build/
 # 	sudo cp -r tools opensn_build/
 	sudo tar cvf opensn_build.tar.gz opensn_build/*

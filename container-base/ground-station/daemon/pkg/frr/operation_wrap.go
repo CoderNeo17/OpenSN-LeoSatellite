@@ -51,6 +51,9 @@ interface %s
         cmd = fmt.Sprintf(`
 interface %s
  ip ospf area 0
+ ip ospf network point-to-point
+ ip ospf hello-interval 1
+ ip ospf dead-interval 3
 `, ifName)
     }
 

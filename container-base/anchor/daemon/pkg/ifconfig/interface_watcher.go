@@ -2,7 +2,7 @@ package ifconfig
 
 import (
 	"anchor/data"
-	"anchor/model"
+	// "anchor/model"
 	"anchor/pkg/frr"
 	"time"
 
@@ -28,6 +28,9 @@ func InitInterfaceWatcher() {
 }
 
 func InterfaceWatcher() {
+	if err := frr.InitOspf(); err != nil {
+		logrus.Errorf("InitOspf error: %s",err)
+	}
 	for {
 		links, err := netlink.LinkList()
 		if err != nil {
@@ -47,7 +50,7 @@ func InterfaceWatcher() {
 					continue
 				}
 				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" {
-					frr.InitConfigBatch([]*model.LinkInfo{topoInfo})
+					frr.EnableOspfOnInterface(link.Attrs().Name,false,0)
 				}
 				logrus.Infof("Init Interface %s Success.", link.Attrs().Name)
 				linkReadymap[link.Attrs().Name] = true

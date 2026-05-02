@@ -433,9 +433,9 @@ func (l *VethLink) SetParameters(oldPara, newPara map[string]int64) error {
 
 				tbfInfo := TbfQdiscTemplate
 				tbfInfo.LinkIndex = dev.Attrs().Index
-				tbfInfo.Limit = uint32(bw)
+				tbfInfo.Limit = uint32(bw * 100 / 1000) // Limit = Bandwidth * 100ms, in bytes
 				tbfInfo.Rate = uint64(bw)
-				tbfInfo.Buffer = uint32(bw) / 8
+				tbfInfo.Buffer = uint32(bw * 10 / 1000) // Buffer = Bandwidth * 10ms, in bytes
 
 				err = netlink.QdiscReplace(&tbfInfo)
 				if err != nil {

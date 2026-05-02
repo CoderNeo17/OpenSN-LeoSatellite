@@ -7,5 +7,7 @@ build:
 	sudo mv satellite-router/satellite-router-node.tar.gz ./
 	cd user-terminal && make build-file
 	sudo mv user-terminal/user-terminal-node.tar.gz ./
+	cd anchor && make build-file
+	sudo mv anchor/anchor-node.tar.gz ./
 clean:
 	sudo rm -rf *.tar.gz

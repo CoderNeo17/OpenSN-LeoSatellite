@@ -39,7 +39,6 @@ func CreateContainer(instance *model.Instance) error {
 			containerConfig = &container.Config{
 				Hostname: instance.InstanceID,
 				Image:    instance.Image,
-				User:     "1000:1000",
 				Env: []string{
 					fmt.Sprintf("DISPLAY=%s", os.Getenv("DISPLAY")),
 					"XAUTHORITY=/home/user/.Xauthority",
@@ -52,7 +51,7 @@ func CreateContainer(instance *model.Instance) error {
 
 		var nMode = "none"
 		if instance.Type == "Anchor" {
-			nMode = "bridge"
+			nMode = "host"
 		}
 
 		binds := []string{

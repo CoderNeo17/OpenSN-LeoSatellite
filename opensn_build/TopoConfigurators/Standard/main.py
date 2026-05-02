@@ -1,3 +1,5 @@
+import time
+
 from opensn.operator.emulator_operator import EmulatorOperator
 from opensn.model.instance import Instance
 from opensn.model.position import Position
@@ -108,7 +110,11 @@ def handle_gsl_handover(cli, node, node_type_label, position_map, all_instance_m
             address1 = old_link[old_link_id].address_infos[0]
             address2 = old_link[old_link_id].address_infos[1]
     else:
-        subnet = alloc_ipv4(30)
+        subnet = None
+        if node.type == TYPE_GROUND_STATION:
+            subnet = alloc_ipv4(30, pool="gsl")
+        elif node.type == TYPE_GROUND_TERMINAL:
+            subnet = alloc_ipv4(30, pool="ut")
         address1 = {LINK_V4_ADDR_KEY: format_ipv4(subnet[1], 30)}
         address2 = {LINK_V4_ADDR_KEY: format_ipv4(subnet[2], 30)}
         logger.info("[%s] Switch %s from None to %s" % (
@@ -132,7 +138,7 @@ def handle_gsl_handover(cli, node, node_type_label, position_map, all_instance_m
 
 
 def anchor(gs,anc):
-    subnet = alloc_ipv4(30)
+    subnet = alloc_ipv4(30, pool="anchor")
     cli.enable_link_between(
         anc.node_index,
         anc.instance_id,
@@ -141,6 +147,10 @@ def anchor(gs,anc):
         address_info1={LINK_V4_ADDR_KEY: format_ipv4(subnet[1], 30)},
         address_info2={LINK_V4_ADDR_KEY: format_ipv4(subnet[2], 30)},
     )
+    node_config = genenrate_config(cli, anc.node_index, anc.instance_id)
+    cli.put_instance_config(anc.node_index, anc.instance_id, json.dumps(node_config))
+    sat_config = genenrate_config(cli, gs.node_index, gs.instance_id)
+    cli.put_instance_config(gs.node_index, gs.instance_id, json.dumps(sat_config))
     logger.info("Linked anchor %s <-> ground station %s" % (
         anc.instance_id, gs.instance_id
     ))
@@ -157,7 +167,7 @@ if __name__ == "__main__":
     anchored = False
     # trace = IperfTrace("trace.csv")
     # trace.start()
-
+    t0 = time.perf_counter()
     while True:
         node_list = cli.get_node_map()
         all_instance_map: dict[str,Instance] = {}
@@ -217,9 +227,6 @@ if __name__ == "__main__":
             for gs in ground_station_list:
                 anchor(gs,anchor_node)
             anchored = True
-
-        if started:
-            sim_elapsed += step_second
 
         address_map = {}
         for node_index,node in node_list.items():
@@ -333,5 +340,10 @@ if __name__ == "__main__":
                 continue
             config_map = genenrate_config(cli,instance_info.node_index,instance_id)
             cli.put_instance_config_if_not_exist(instance_info.node_index,instance_id,json.dumps(config_map))
+        
+        t1 = time.perf_counter()
+        if started:
+            sim_elapsed += t1 - t0
+        t0 = t1
 
-        sleep(step_second)
+        # sleep(step_second)
