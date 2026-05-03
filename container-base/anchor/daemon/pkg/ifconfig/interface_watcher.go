@@ -3,14 +3,14 @@ package ifconfig
 import (
 	"anchor/data"
 	// "anchor/model"
-	"anchor/pkg/frr"
+	// "anchor/pkg/frr"
 	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 )
 
-const checkGap = 500 * time.Millisecond
+const checkGap = 10 * time.Millisecond
 
 var linkReadymap = make(map[string]bool)
 
@@ -28,9 +28,9 @@ func InitInterfaceWatcher() {
 }
 
 func InterfaceWatcher() {
-	if err := frr.InitOspf(); err != nil {
-		logrus.Errorf("InitOspf error: %s",err)
-	}
+	// if err := frr.InitOspf(); err != nil {
+	// 	logrus.Errorf("InitOspf error: %s",err)
+	// }
 	for {
 		links, err := netlink.LinkList()
 		if err != nil {
@@ -49,9 +49,9 @@ func InterfaceWatcher() {
 					logrus.Errorf("Set Addr %s to %s Error: %s", topoInfo.V4Addr, link.Attrs().Name, err.Error())
 					continue
 				}
-				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" {
-					frr.EnableOspfOnInterface(link.Attrs().Name,false,0)
-				}
+				// if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "GroundStation" {
+				// 	frr.EnableOspfOnInterface(link.Attrs().Name,false,0)
+				// }
 				logrus.Infof("Init Interface %s Success.", link.Attrs().Name)
 				linkReadymap[link.Attrs().Name] = true
 			} else {

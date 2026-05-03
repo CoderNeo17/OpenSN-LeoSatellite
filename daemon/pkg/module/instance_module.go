@@ -56,6 +56,7 @@ func CreateContainer(instance *model.Instance) error {
 
 		binds := []string{
 			fmt.Sprintf("%s:%s", dir.MountShareData, "/share"),
+			fmt.Sprintf("%s:%s", "/home/psbabhishek/OpenSN-Library/opensn_build/opensn-daemon/topo", "/topo"),
 		}
 
 		resource := container.Resources{

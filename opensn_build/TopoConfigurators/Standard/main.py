@@ -20,10 +20,28 @@ from address_allocator import alloc_ipv4,format_ipv4
 from link_model import *
 from loguru import logger
 import json, math
+from route_computer import write_topology
 step_second = 1
 from trace import IperfTrace
 
 polar_threshold = dec2ra(66.5)
+
+import subprocess
+
+def flush_orphan_veths():
+    result = subprocess.run(
+        ["ip", "-j", "link", "show"],
+        capture_output=True, text=True
+    )
+    links = json.loads(result.stdout)
+    for link in links:
+        if link.get("operstate") == "DOWN" and \
+           link.get("link_type") == "ether" and \
+           "link_index" in link and \
+           link["ifindex"] != link.get("link_index"):
+            # peer index exists in json but actual peer ns is gone
+            name = link["ifname"]
+            subprocess.run(["ip", "link", "del", name])
 
 def genenrate_config(cli:EmulatorOperator,node_index:int,instance_id:str):
     instance_info = cli.get_instance(node_index,instance_id)
@@ -76,11 +94,15 @@ def handle_gsl_handover(cli, node, node_type_label, position_map, all_instance_m
     address1 = {}
     address2 = {}
 
+    old_sat_node_index = None
+    new_sat_node_index = None
+
     old_link_id = ""
     for key in node.connections.keys():
         other_node_type = node.connections[key].instance_type
         if other_node_type == TYPE_SATELLITE:
             old_link_id = key
+            old_sat_node_index = node.connections[key].end_node_index
             break
 
     if old_link_id != "":
@@ -131,6 +153,23 @@ def handle_gsl_handover(cli, node, node_type_label, position_map, all_instance_m
         address_info1=address1,
         address_info2=address2,
     )
+    new_sat_node_index = all_instance_map[satellite_id].node_index
+    # Fresh fetch of only affected nodes — 2-3 etcd calls
+    # Updates node_link_map in place for these nodes only
+    affected_node_indexes = {node.node_index, new_sat_node_index}
+    if old_sat_node_index is not None:
+        affected_node_indexes.add(old_sat_node_index)
+    for ni in affected_node_indexes:
+        if ni is None:
+            continue
+        fresh = cli.get_link_map(ni)
+        node_link_map[ni] = {
+            link_id: li for link_id, li in fresh.items()
+            if li.address_infos
+            and li.address_infos[0] is not None
+            and LINK_V4_ADDR_KEY in li.address_infos[0]
+        }
+
     node_config = genenrate_config(cli, node.node_index, node.instance_id)
     cli.put_instance_config(node.node_index, node.instance_id, json.dumps(node_config))
     sat_config = genenrate_config(cli, all_instance_map[satellite_id].node_index, all_instance_map[satellite_id].instance_id)
@@ -155,10 +194,15 @@ def anchor(gs,anc):
         anc.instance_id, gs.instance_id
     ))
 
+all_instance_map: dict[str,Instance] = {}
+node_link_map: dict[int,dict[str,LinkBase]] = {}
+
 if __name__ == "__main__":
 
+    flush_orphan_veths()
+
     instance_config_updated:dict[str,str] = {}
-    
+    topo_path = "/home/psbabhishek/OpenSN-Library/opensn_build/opensn-daemon/topo/topology.json"
     cli = EmulatorOperator(ADDR,PORT)
 
     SIM_START = datetime(2026, 3, 1, 10, 58, 28)
@@ -170,8 +214,8 @@ if __name__ == "__main__":
     t0 = time.perf_counter()
     while True:
         node_list = cli.get_node_map()
-        all_instance_map: dict[str,Instance] = {}
-        node_link_map: dict[int,dict[str,LinkBase]] = {}
+        all_instance_map = {}
+        node_link_map = {}
         ground_station_list: list[Instance] = []
         user_terminal_list: list[Instance] = []          # NEW
         anchor_node : Instance = None
@@ -257,6 +301,9 @@ if __name__ == "__main__":
         # User Terminal GSL handover                       # NEW
         for user_terminal in user_terminal_list:
             handle_gsl_handover(cli, user_terminal, "UT", position_map, all_instance_map)
+
+        # Write topology immediately — containers reroute within ~3ms
+        write_topology(all_instance_map, node_link_map, topo_path)
 
         # Link parameter updates (delay, bandwidth, loss, polar cutoff)
         for node_index,link_map in node_link_map.items():

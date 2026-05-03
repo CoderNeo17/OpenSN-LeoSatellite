@@ -2,7 +2,7 @@ package ifconfig
 
 import (
 	"ground-station/data"
-	"ground-station/pkg/frr"
+	// "ground-station/pkg/frr"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -24,10 +24,10 @@ func InitInterfaceWatcher() {
 }
 
 func InterfaceWatcher() {
-	if err := frr.InitOspf() ; err != nil {
-		logrus.Errorf("Ospf Init Error: %s", err.Error())
-		return
-	}
+	// if err := frr.InitOspf() ; err != nil {
+	// 	logrus.Errorf("Ospf Init Error: %s", err.Error())
+	// 	return
+	// }
 	for {
 		links, err := netlink.LinkList()
 		if err != nil {
@@ -46,13 +46,13 @@ func InterfaceWatcher() {
 					logrus.Errorf("Set Addr %s to %s Error: %s", topoInfo.V4Addr, link.Attrs().Name, err.Error())
 					continue
 				}
-				if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Satellite" ||
-					data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Anchor" {
-					err = frr.EnableOspfOnInterface(link.Attrs().Name,false)
-					if err != nil {
-						logrus.Errorf("Enable OSPF on Interface %s Error: %s", link.Attrs().Name, err.Error())
-					}
-				}
+				// if data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Satellite" ||
+				// 	data.TopoInfo.EndInfos[link.Attrs().Name].Type == "Anchor" {
+				// 	err = frr.EnableOspfOnInterface(link.Attrs().Name,false)
+				// 	if err != nil {
+				// 		logrus.Errorf("Enable OSPF on Interface %s Error: %s", link.Attrs().Name, err.Error())
+				// 	}
+				// }
 				logrus.Infof("Init Interface %s Success.", link.Attrs().Name)
 				linkReadymap[link.Attrs().Name] = true
 			} else {
