@@ -15,11 +15,10 @@ func InitOspf() error {
     batch := `
 router ospf
  area 1 stub no-summary
- area 1 range 10.0.0.0/16 not-advertise
  area 1 range 10.1.0.0/16 advertise
  area 1 range 10.2.0.0/16 not-advertise  
 `
-
+//area 1 range 10.0.0.0/16 not-advertise - removed by Anupam
     confFile, err := os.Create(CommandBatchPath)
     if err != nil {
         logrus.Errorf("Failed to create batch file: %v", err)

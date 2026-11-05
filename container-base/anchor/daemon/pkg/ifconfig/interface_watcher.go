@@ -24,6 +24,9 @@ func InitInterfaceWatcher() {
 	if err := EnableNAT(); err != nil {
 		logrus.Errorf("Enable NAT Error: %s", err.Error())
 	}
+	if err := EnableNATForwarding(); err != nil {
+		logrus.Errorf("Enable NAT Forwarding Error: %s", err.Error())
+	}
     go InterfaceWatcher()
 }
 

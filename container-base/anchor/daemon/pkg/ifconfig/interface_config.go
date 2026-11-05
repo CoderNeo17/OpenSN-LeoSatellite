@@ -168,6 +168,28 @@ func EnableNAT() error {
     return cmd.Run()
 }
 
+func EnableNATForwarding() error {
+    cmd1 := exec.Command(
+        "iptables",
+        "-A", "FORWARD",
+        "-s", "10.0.0.0/14",
+        "-j", "ACCEPT",
+    )
+
+    if err := cmd1.Run(); err != nil {
+        return err
+    }
+
+    cmd2 := exec.Command(
+        "iptables",
+        "-A", "FORWARD",
+        "-d", "10.0.0.0/14",
+        "-j", "ACCEPT",
+    )
+
+    return cmd2.Run()
+}
+
 func DelDefaultRoute() {
 	_ = netlink.RouteDel(&netlink.Route{
 		Dst: &net.IPNet{
